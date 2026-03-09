@@ -9,49 +9,34 @@ function AdminLayout() {
   const { user } = useContext(AuthContext);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="flex min-h-screen bg-gray-100">
 
-      {/* Desktop Sidebar */}
+      {/* Sidebar */}
       {user && (
-        <aside className="hidden lg:flex w-64 fixed inset-y-0 left-0 z-40">
-          <Sidebar />
-        </aside>
+        <Sidebar open={open} onClose={() => setOpen(false)} />
       )}
 
-      {/* Mobile Sidebar Overlay */}
-      {user && open && (
-        <div className="fixed inset-0 z-50 flex lg:hidden">
-          {/* Backdrop */}
-          <div
-            className="flex-1 bg-black/40"
-            onClick={() => setOpen(false)}
-          ></div>
+      {/* Main Content */}
+      <div className={`flex flex-col flex-1 ${user ? "lg:ml-64" : ""}`}>
 
-          {/* Sidebar */}
-          <div className="w-64 bg-white shadow-xl">
-            <Sidebar onClose={() => setOpen(false)} />
-          </div>
-        </div>
-      )}
-
-      {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col w-full ${user ? "lg:ml-64" : ""}`}>
-
-        {/* Top Bar */}
+        {/* Top Navbar */}
         {user && (
-          <header className="h-16 bg-white shadow flex items-center px-6 sticky top-0 z-30">
+          <header className="h-16 bg-white shadow flex items-center px-6 sticky top-0 z-40">
             <button
               className="lg:hidden mr-4"
               onClick={() => setOpen(true)}
             >
               <Menu size={24} />
             </button>
-            <h1 className="font-semibold text-lg">Admin Panel</h1>
+
+            <h1 className="font-semibold text-lg">
+              Admin Panel
+            </h1>
           </header>
         )}
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 p-6 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>

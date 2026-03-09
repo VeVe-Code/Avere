@@ -28,7 +28,7 @@ if(res.status === 200){
                        </Link>
     <div className="mt-5 flex gap-3">
      
-     <Link to={'/admin/adminsecurity/'+s._id}>
+     <Link to={'/admin/adminsecurity/edit/'+s._id}>
       <button className="bg-blue-600 text-white px-4 py-2 rounded-lg">
         Edit
       </button></Link>
