@@ -18,6 +18,15 @@ let SecritySchema = new Schema({
      photo:{
         type:String,
       
+    },
+	  category:{
+        type: Schema.Types.ObjectId,
+        ref: 'Category',
+        required: true
+    },
+    hidden: {
+        type: Boolean,
+        default: false
     }
 },{
     timestamps:true

@@ -1,278 +1,420 @@
-import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import DarkVeil from "../components/DarkVeil";
-import { BackgroundBeams } from "../components/background-beams";
-import SEO from "../components/SEO";
+import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { ArrowRight } from 'lucide-react'
+import SEO from '../components/SEO'
+
+const ease = [0.22, 1, 0.36, 1]
+
+const reveal = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease } },
+}
+
+const services = [
+  {
+    num: '01',
+    title: 'Cloud Man-Day Support',
+    desc: 'Infrastructure setup, migration, troubleshooting, architecture, monitoring, and performance optimization.',
+  },
+  {
+    num: '02',
+    title: 'Software Development',
+    desc: 'Custom applications and enterprise software built for productivity and scale.',
+  },
+  {
+    num: '03',
+    title: 'Cloud Migration',
+    desc: 'Move on-premise systems to AWS, Azure, GCP, or Huawei Cloud with minimal disruption.',
+  },
+  {
+    num: '04',
+    title: 'DevOps & Automation',
+    desc: 'CI/CD, automated deployment, and reliability engineering across modern toolchains.',
+  },
+  {
+    num: '05',
+    title: 'Database Services',
+    desc: 'Migration, backup management, and performance tuning for critical data platforms.',
+  },
+  {
+    num: '06',
+    title: 'Licensing & Hardware',
+    desc: 'Authorized reseller support for enterprise IT solutions and software licensing.',
+  },
+]
+
+const strengths = [
+  { title: 'Rapid response', text: 'Fast, efficient support tailored to each engagement.' },
+  { title: 'Specialist talent', text: 'Hands-on experience across enterprise environments.' },
+  { title: 'Flexible delivery', text: 'Scalable packages for teams of any size.' },
+  { title: 'Long-term care', text: 'Dedicated partnership focused on client success.' },
+  { title: 'Security first', text: 'Governance and compliance built into delivery.' },
+  { title: 'Always improving', text: 'Agile and DevOps culture of continuous innovation.' },
+]
+
+const clouds = ['AWS', 'Azure', 'GCP', 'Huawei Cloud']
+
+const clients = [
+  'Krungthai Computer Services',
+  'Kluaynamthai Hospital',
+  'Srisawad Corporation',
+  'Siriraj Hospital',
+  'Kasikorn Carabao',
+  'Zenith Comp',
+  'Premium Gold Yaowarat',
+  'Mercifully',
+  'Tungthanasin (Easy Money)',
+]
+
+const facts = [
+  { label: 'Founded', value: '2016' },
+  { label: 'Based in', value: 'Bangkok' },
+  { label: 'Focus', value: 'Cloud & IT' },
+  { label: 'Model', value: 'End-to-end' },
+]
 
 export default function About() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-
-    const script = document.createElement("script");
-    script.type = "module";
-    script.src =
-      "https://unpkg.com/@splinetool/viewer@1.12.48/build/spline-viewer.js";
-    document.body.appendChild(script);
-  }, []);
-
-  const sectionRef = useRef(null);
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start center", "end center"],
-  });
-
-  const y = useTransform(scrollYProgress, [0, 1], [0, 160]);
-  const opacity = useTransform(scrollYProgress, [0, 0.85, 1], [1, 1, 0]);
-
-  const list = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.15 },
-    },
-  };
-
-  const item = {
-    hidden: { opacity: 0, x: 30 },
-    show: { opacity: 1, x: 0 },
-  };
-
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-       <SEO
-        title="About Page - Bislator"
-        description="about page"
+    <div className="min-h-screen bg-[#070b14] text-white">
+      <SEO
+        title="About Us - Avere"
+        description="Avere Co., Ltd. — Bangkok-based IT services and cloud solutions since 2016."
       />
-       <BackgroundBeams />
-      {/* ================= HERO ================= */}
-      <section className="relative h-[520px] flex items-center justify-center overflow-hidden">
-        {mounted && (
-          <motion.div
-            className="absolute inset-0 opacity-30"
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <DarkVeil
-              color={[0.14, 0.67, 1]}
-              amplitude={0.8}
-              distance={0.35}
-              enableMouseInteraction
-            />
-          </motion.div>
-        )}
 
-        <motion.h1
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9 }}
-          className="relative z-10 text-6xl font-extrabold"
-        >
-          About Us
-        </motion.h1>
+      {/* Full-bleed photo hero */}
+      <section className="relative min-h-[88vh] flex items-end">
+        <img
+          src="/about1.png"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#070b14] via-[#070b14]/75 to-[#070b14]/35" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#070b14]/80 via-transparent to-transparent" />
+
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pb-16 sm:pb-20 pt-32">
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease }}
+            className="text-[11px] sm:text-xs font-semibold tracking-[0.28em] uppercase text-blue-300 mb-4"
+          >
+            About the company
+          </motion.p>
+          <motion.h1
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.05, ease }}
+            className="text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-tight max-w-2xl"
+          >
+            Avere
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.12, ease }}
+            className="mt-5 max-w-xl text-base sm:text-lg text-slate-300 leading-relaxed"
+          >
+            Reliable IT services and cloud solutions for organizations accelerating digital transformation.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.2, ease }}
+            className="mt-8 flex flex-wrap gap-3"
+          >
+            <Link
+              to="/contactus"
+              className="inline-flex items-center gap-2 rounded-full bg-white text-slate-900 px-6 py-2.5 text-sm font-semibold hover:bg-blue-50 transition"
+            >
+              Talk to us
+              <ArrowRight size={16} />
+            </Link>
+            <a
+              href="#story"
+              className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition"
+            >
+              Read our story
+            </a>
+          </motion.div>
+        </div>
       </section>
 
-      {/* ================= FOLLOW SECTION ================= */}
-    <section
-  ref={sectionRef}
-  className="
-    relative
-    px-6 sm:px-10 lg:px-16
-    pt-20 lg:pt-24
-    pb-32 lg:pb-40
-    overflow-hidden
-  "
->
-  {/* title */}
-  <motion.div
-    style={{ y, opacity }}
-    className="flex justify-center mb-16 lg:mb-24"
-    initial={{ opacity: 0, y: -30 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.8, ease: "easeOut" }}
-  >
-    <motion.div
-      initial={{ scale: 0.9 }}
-      animate={{ scale: 1 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className="px-8 lg:px-10 py-4 rounded-2xl bg-white/80 backdrop-blur-md border shadow"
-    >
-      <h1 className="text-3xl sm:text-4xl font-extrabold text-center">
-        Bislator
-      </h1>
-      <motion.div
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ delay: 0.4, duration: 0.6 }}
-        className="mt-2 h-1 w-12 sm:w-16 mx-auto bg-blue-500 rounded-full origin-left"
-      />
-    </motion.div>
-  </motion.div>
-
-  {/* content */}
-  <div className="flex flex-col lg:flex-row gap-10 lg:gap-12 items-center">
-    {/* text */}
-    <motion.p
-      className="
-        w-full lg:w-1/2
-        text-base sm:text-lg
-        text-slate-700
-        leading-relaxed
-      "
-      initial={{ opacity: 0, x: -60 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-    >
-      Bislator founded in 1995, is a system integration company providing
-      IT solutions across hardware, software, network, and security.
-      <br /><br />
-      With decades of experience, we ensure our customers receive the
-      best solutions — because “Your Success is Our Success.”
-    </motion.p>
-
-    {/* image */}
-    <motion.img
-      src="/logo.png"
-      alt="Bislator"
-      className="
-        w-3/4 sm:w-2/3 lg:w-[45%]
-        max-w-sm
-        rounded-xl
-        shadow-lg
-      "
-      initial={{ opacity: 0, scale: 0.9, y: 20 }}
-      whileInView={{ opacity: 1, scale: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.9, ease: "easeOut" }}
-      whileHover={{ scale: 1.2 }}
-    />
-  </div>
-
-  {/* business target */}
-  <section
-    className="
-      bg-slate-50
-      mt-24
-      py-20 lg:py-24
-      px-6 sm:px-10 lg:px-16
-    "
-  >
-    <motion.div
-      className="max-w-5xl mx-auto text-center"
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 1, ease: "easeOut" }}
-    >
-      <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-        Business Target
-      </h2>
-
-      <motion.div
-        initial={{ scaleX: 0 }}
-        whileInView={{ scaleX: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.3, duration: 1 }}
-        className="w-16 sm:w-20 h-1 bg-blue-500 mx-auto mb-6 sm:mb-8 rounded-full origin-center"
-      />
-
-      <p className="text-base sm:text-lg leading-relaxed text-slate-700">
-        Bislator’s business target is to deliver reliable and innovative IT
-        solutions that help organizations improve efficiency, security, and
-        digital performance. We focus on providing high-quality system
-        integration services across hardware, software, networking, and
-        security to meet diverse business needs.
-      </p>
-    </motion.div>
-  </section>
-</section>
-
-
-
-      {/* ================= SERVICES ================= */}
-      <div className="flex min-h-screen px-10 py-20 gap-10">
-          <BackgroundBeams />
-        <div className="w-1/2">
-          <div className="sticky top-32">
-            <h2 className="text-5xl font-bold">Bislator</h2>
-            <p className="mt-4 text-gray-500">
-              We build modern digital solutions.
-            </p>
-          </div>
+      {/* Facts strip */}
+      <section className="border-y border-white/10 bg-[#0a101c]">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 py-8 sm:py-10 grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          {facts.map((f, i) => (
+            <motion.div
+              key={f.label}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.06, duration: 0.4, ease }}
+            >
+              <p className="text-[11px] tracking-[0.2em] uppercase text-slate-500 mb-1">{f.label}</p>
+              <p className="text-xl sm:text-2xl font-semibold text-white">{f.value}</p>
+            </motion.div>
+          ))}
         </div>
+      </section>
 
-        <div className="w-1/2">
-          <motion.ul
-            variants={list}
+      {/* Story */}
+      <section id="story" className="scroll-mt-24 px-5 sm:px-8 lg:px-12 py-20 sm:py-28">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-20 items-start">
+          <motion.div
+            variants={reveal}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: '-60px' }}
+          >
+            <p className="text-[11px] font-semibold tracking-[0.22em] uppercase text-blue-400 mb-3">
+              Our story
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-6 text-white">
+              From Bangkok to enterprise-ready delivery
+            </h2>
+            <div className="space-y-4 text-slate-400 text-[15px] sm:text-base leading-relaxed">
+              <p>
+                Founded on February 29, 2016, Avere Co., Ltd. is a Bangkok-based technology company
+                providing professional IT services and cloud solutions that help organizations
+                accelerate digital transformation.
+              </p>
+              <p>
+                With skilled engineers and developers, we deliver end-to-end work across software
+                development, cloud infrastructure, DevOps automation, and IT outsourcing — with
+                agility, flexibility, and continuous innovation.
+              </p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.55, ease }}
+            className="relative"
+          >
+            <img
+              src="/about2.png"
+              alt="Avere"
+              className="w-full rounded-sm object-cover aspect-[5/6] sm:aspect-[4/5]"
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 bg-gradient-to-t from-black/80 to-transparent">
+              <p className="text-sm text-slate-200">Avere Co., Ltd. · Bangkok, Thailand</p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Business target */}
+      <section className="px-5 sm:px-8 lg:px-12 py-16 sm:py-20 bg-[#0a101c] border-y border-white/10">
+        <motion.div
+          className="max-w-3xl mx-auto"
+          variants={reveal}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+        >
+          <p className="text-[11px] font-semibold tracking-[0.22em] uppercase text-blue-400 mb-3">
+            Purpose
+          </p>
+          <h2 className="text-3xl font-semibold tracking-tight mb-5">Business target</h2>
+          <p className="text-slate-400 text-base sm:text-lg leading-relaxed">
+            Deliver reliable, innovative IT solutions that improve efficiency, security, and digital
+            performance — through high-quality system integration across hardware, software,
+            networking, and security.
+          </p>
+        </motion.div>
+      </section>
+
+      {/* Services — numbered list */}
+      <section className="px-5 sm:px-8 lg:px-12 py-20 sm:py-28">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            className="mb-12 max-w-xl"
+            variants={reveal}
             initial="hidden"
             whileInView="show"
             viewport={{ once: true }}
-            className="space-y-6 text-xl"
           >
-            {[
-              "Software Development Services",
-              "UI / UX & Design Services",
-              "Cloud & Infrastructure Services",
-              "Data & AI Services",
-              "Digital Marketing & SEO",
-              "Emerging Technology Services",
-            ].map((s, i) => (
-              <motion.li
-                key={i}
-                variants={item}
-                className="border-b pb-4 hover:text-blue-600"
+            <p className="text-[11px] font-semibold tracking-[0.22em] uppercase text-blue-400 mb-3">
+              Capabilities
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight">
+              What we deliver
+            </h2>
+          </motion.div>
+
+          <div className="divide-y divide-white/10 border-y border-white/10">
+            {services.map((s, i) => (
+              <motion.div
+                key={s.num}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ delay: i * 0.04, duration: 0.45, ease }}
+                className="group grid grid-cols-[auto_1fr] sm:grid-cols-[4.5rem_1fr_1.4fr] gap-4 sm:gap-8 py-7 sm:py-8 items-start"
               >
-                {s}
+                <span className="text-sm font-medium text-blue-400/80 tabular-nums pt-1">
+                  {s.num}
+                </span>
+                <h3 className="text-lg sm:text-xl font-semibold text-white group-hover:text-blue-300 transition-colors">
+                  {s.title}
+                </h3>
+                <p className="col-span-2 sm:col-span-1 text-sm sm:text-[15px] text-slate-400 leading-relaxed">
+                  {s.desc}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Cloud + vision split */}
+      <section className="px-5 sm:px-8 lg:px-12 py-16 sm:py-24 bg-[#0a101c] border-y border-white/10">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
+          <motion.div
+            variants={reveal}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+          >
+            <p className="text-[11px] font-semibold tracking-[0.22em] uppercase text-blue-400 mb-3">
+              Platforms
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-4">
+              Cloud expertise
+            </h2>
+            <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-6">
+              Experience across AWS, Microsoft Azure, Google Cloud, and Huawei Cloud — with
+              certifications including AWS Solutions Architect, Azure Administrator Associate, and
+              Google Cloud Engineer.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {clouds.map((c) => (
+                <span
+                  key={c}
+                  className="rounded-full border border-white/15 px-3.5 py-1.5 text-xs font-medium text-slate-200"
+                >
+                  {c}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            variants={reveal}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="md:border-l md:border-white/10 md:pl-16"
+          >
+            <p className="text-[11px] font-semibold tracking-[0.22em] uppercase text-blue-400 mb-3">
+              Vision
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-4">
+              Where we’re headed
+            </h2>
+            <p className="text-slate-300 text-base sm:text-lg leading-relaxed">
+              Empower businesses with reliable, scalable, and secure cloud technology — driving
+              innovation and operational excellence.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Strengths */}
+      <section className="px-5 sm:px-8 lg:px-12 py-20 sm:py-28">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            className="mb-12"
+            variants={reveal}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+          >
+            <p className="text-[11px] font-semibold tracking-[0.22em] uppercase text-blue-400 mb-3">
+              Why Avere
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight">Key strengths</h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-10">
+            {strengths.map((s, i) => (
+              <motion.div
+                key={s.title}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05, duration: 0.4, ease }}
+              >
+                <div className="mb-3 h-px w-8 bg-blue-500" />
+                <h3 className="text-lg font-semibold text-white mb-2">{s.title}</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">{s.text}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Clients */}
+      <section className="px-5 sm:px-8 lg:px-12 py-16 sm:py-20 bg-[#0a101c] border-y border-white/10">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            className="mb-10"
+            variants={reveal}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+          >
+            <p className="text-[11px] font-semibold tracking-[0.22em] uppercase text-blue-400 mb-3">
+              Partnerships
+            </p>
+            <h2 className="text-3xl font-semibold tracking-tight">Selected clients</h2>
+          </motion.div>
+
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-0">
+            {clients.map((name, i) => (
+              <motion.li
+                key={name}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.03, duration: 0.35 }}
+                className="border-t border-white/10 py-4 text-sm sm:text-[15px] text-slate-300"
+              >
+                {name}
               </motion.li>
             ))}
-          </motion.ul>
+          </ul>
         </div>
-      </div>
+      </section>
 
-      {/* ================= SPLINE ================= */}
-<div className="flex flex-col md:px-20 lg:flex-row gap-6 lg:gap-10 items-center">
-  {/* Image */}
-  <div className="w-full lg:w-1/2">
-    <img
-      src="/unnamed (1).jpg"
-      alt="Preview"
-      className="
-        w-full
-        h-auto
-        max-h-[260px] sm:max-h-[340px] md:max-h-[400px] lg:max-h-none
-        rounded-xl
-        object-cover
-      "
-    />
-  </div>
-
-  {/* Spline */}
-  <motion.div
-    className="
-      w-full lg:w-1/2
-      h-[220px] sm:h-[300px] md:h-[360px] lg:h-[420px]
-      max-h-[450px]
-      rounded-xl
-      overflow-hidden
-      shadow-xl
-      bg-white
-    "
-    initial={{ opacity: 0, x: 50 }}
-    whileInView={{ opacity: 1, x: 0 }}
-    viewport={{ once: true }}
-  >
-    <spline-viewer
-      class="w-full h-full"
-      url="https://prod.spline.design/LrtQKl3hoM0Q4BR5/scene.splinecode"
-    />
-  </motion.div>
-</div>
-
-      
+      {/* CTA */}
+      <section className="px-5 sm:px-8 lg:px-12 py-20 sm:py-28">
+        <motion.div
+          className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-end sm:justify-between gap-8"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, ease }}
+        >
+          <div>
+            <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight max-w-md">
+              Let’s build your next system together.
+            </h2>
+            <p className="mt-3 text-slate-400 max-w-md text-sm sm:text-base">
+              Share your infrastructure or software goals — we’ll respond with a clear next step.
+            </p>
+          </div>
+          <Link
+            to="/contactus"
+            className="inline-flex items-center gap-2 self-start rounded-full bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 text-sm font-semibold transition"
+          >
+            Contact Avere
+            <ArrowRight size={16} />
+          </Link>
+        </motion.div>
+      </section>
     </div>
-  );
+  )
 }

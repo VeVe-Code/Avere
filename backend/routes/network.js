@@ -1,18 +1,20 @@
 let express = require("express")
 const networkcontroller = require("../controller/networkcontroller")
 const handleerrormsg = require("../middleware/handleerrormsg")
-const { body, validationResult } = require('express-validator');
+const { body } = require('express-validator');
 let upload = require('../helpers/upload')
 let router = express.Router()
+const { AuthMiddleware, requireAdmin } = require('../middleware/AuthMiddleware');
+const adminOnly = [AuthMiddleware, requireAdmin];
 
-router.get('/api/network',networkcontroller.index)
-router.post('/api/network',[
+router.get('/api/network', ...adminOnly, networkcontroller.index)
+router.post('/api/network', ...adminOnly, [
     body('title').notEmpty(),
     body('description').notEmpty(),
     body('about').notEmpty()        
 ],handleerrormsg,networkcontroller.store)
-router.get('/api/network/:id',networkcontroller.show)
-router.post('/api/network/:id/upload',[
+router.get('/api/network/:id', ...adminOnly, networkcontroller.show)
+router.post('/api/network/:id/upload', ...adminOnly, [
     upload.single('photo'),
   body('photo').custom((value,{req})=>{
     if(!req.file){
@@ -22,13 +24,13 @@ router.post('/api/network/:id/upload',[
       throw new Error("photo must be image")
     }
 
-    return true   // ✅ ADD THIS LINE ONLY
+    return true
   }),
 ],handleerrormsg,networkcontroller.upload)
-router.patch('/api/network/:id',networkcontroller.update)
-router.delete('/api/network/:id',networkcontroller.destroy)
+router.patch('/api/network/:id', ...adminOnly, networkcontroller.update)
+router.patch('/api/network/:id/hidden', ...adminOnly, networkcontroller.toggleHidden)
+router.delete('/api/network/:id', ...adminOnly, networkcontroller.destroy)
 
 
 
 module.exports = router
-

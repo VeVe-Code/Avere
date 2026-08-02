@@ -1,37 +1,85 @@
 import axios from '../../helper/axios'
-import React from 'react'
+import React, { useState } from 'react'
+import { Pencil, Tags, Trash2 } from 'lucide-react'
+import ConfirmDialog from './ConfirmDialog'
 
-function AdminCategorycard({ d, Ondelete, onEdit }) {
+function AdminCategorycard({ d, onDelete, onEdit, active }) {
+  const [busy, setBusy] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
-  const deleteData = async (e) => {
-    e.preventDefault()
-    let res = await axios.delete('/api/category/' + d._id)
-
-    if (res.status === 200) {
-      Ondelete(d._id)
+  const deleteData = async () => {
+    if (busy) return
+    try {
+      setBusy(true)
+      let res = await axios.delete('/api/category/' + d._id)
+      if (res.status === 200) {
+        setConfirmOpen(false)
+        onDelete(d._id)
+      }
+    } catch (err) {
+      console.error(err)
+      window.alert(
+        err.response?.data?.msg ||
+          err.response?.data?.error ||
+          'Failed to delete category'
+      )
+    } finally {
+      setBusy(false)
     }
   }
 
   return (
-    <div className="bg-blue-50 rounded shadow-xl px-4 py-3">
-      <h1 className="text-lg font-semibold">{d.title}</h1>
+    <li
+      className={`flex items-center gap-4 px-4 sm:px-5 py-3.5 transition-colors ${
+        active
+          ? 'bg-blue-50/80 dark:bg-blue-950/30'
+          : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+      }`}
+    >
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+        <Tags size={18} />
+      </div>
 
-      <div className="space-x-3 mt-3">
-        <button
-          onClick={deleteData}
-          className="bg-red-600 text-white py-1 px-3 rounded-xl"
-        >
-          Delete
-        </button>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+          {d.title}
+        </p>
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+          Used for filtering products & services
+        </p>
+      </div>
 
+      <div className="flex items-center gap-1.5 shrink-0">
         <button
+          type="button"
           onClick={() => onEdit(d)}
-          className="bg-blue-600 text-white py-1 px-3 rounded-xl"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
         >
-          Edit
+          <Pencil size={14} />
+          <span className="hidden sm:inline">Edit</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setConfirmOpen(true)}
+          disabled={busy}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 dark:border-red-900/50 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-50"
+        >
+          <Trash2 size={14} />
+          <span className="hidden sm:inline">Delete</span>
         </button>
       </div>
-    </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete this category?"
+        message={`“${d.title}” will be permanently removed.`}
+        confirmLabel="Yes"
+        cancelLabel="No"
+        busy={busy}
+        onCancel={() => !busy && setConfirmOpen(false)}
+        onConfirm={deleteData}
+      />
+    </li>
   )
 }
 

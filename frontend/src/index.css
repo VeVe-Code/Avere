@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer utilities {
   .rotate-x-6 {
     transform: rotateX(6deg);
@@ -7,4 +9,300 @@
   .-rotate-y-6 {
     transform: rotateY(-6deg);
   }
+}
+
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-white text-slate-900 antialiased;
+}
+
+html.dark body {
+  @apply bg-slate-950 text-slate-100;
+}
+
+/* TipTap HTML on public/admin detail pages (prose plugin not installed) */
+.rich-content > * + * {
+  margin-top: 0.75rem;
+}
+
+.rich-content h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  margin: 0.5rem 0;
+}
+
+.rich-content h1:not([style*='color']) {
+  color: #0f172a;
+}
+
+.rich-content h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  margin: 0.4rem 0;
+}
+
+.rich-content h2:not([style*='color']) {
+  color: #1e293b;
+}
+
+.rich-content h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  margin: 0.35rem 0;
+}
+
+.rich-content h3:not([style*='color']) {
+  color: #1e293b;
+}
+
+.rich-content p {
+  margin: 0;
+}
+
+.rich-content strong,
+.rich-content b {
+  font-weight: 600;
+}
+
+.rich-content strong:not([style*='color']),
+.rich-content b:not([style*='color']) {
+  color: inherit;
+}
+
+.rich-content mark {
+  border-radius: 0.15rem;
+  padding: 0.05rem 0.15rem;
+  background-color: #fef08a;
+  color: inherit;
+}
+
+.rich-content em,
+.rich-content i {
+  font-style: italic;
+}
+
+.rich-content u {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.rich-content a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.rich-content a:hover {
+  color: #1e40af;
+}
+
+.rich-content ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0.35rem 0;
+}
+
+.rich-content ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+  margin: 0.35rem 0;
+}
+
+.rich-content li {
+  margin: 0.25rem 0;
+}
+
+.rich-content li > p {
+  display: inline;
+}
+
+.rich-content blockquote {
+  border-left: 3px solid #cbd5e1;
+  padding-left: 0.75rem;
+  color: #64748b;
+  margin: 0.5rem 0;
+}
+
+.rich-content code {
+  background: #f1f5f9;
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.875em;
+}
+
+.rich-content pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+
+.rich-content pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+html.dark .rich-content h1:not([style*='color']),
+html.dark .rich-content h2:not([style*='color']),
+html.dark .rich-content h3:not([style*='color']) {
+  color: #f1f5f9;
+}
+
+html.dark .rich-content a {
+  color: #60a5fa;
+}
+
+html.dark .rich-content a:hover {
+  color: #93c5fd;
+}
+
+html.dark .rich-content blockquote {
+  border-left-color: #475569;
+  color: #94a3b8;
+}
+
+html.dark .rich-content code {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+/* Shooting star: small tip in front + long one-way tail (aligned tips, no fat middle) */
+@keyframes avere-star-0 {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -1000; }
+}
+@keyframes avere-star-14 {
+  from { stroke-dashoffset: 14; }
+  to { stroke-dashoffset: -986; }
+}
+@keyframes avere-star-51 {
+  from { stroke-dashoffset: 51; }
+  to { stroke-dashoffset: -949; }
+}
+@keyframes avere-star-116 {
+  from { stroke-dashoffset: 116; }
+  to { stroke-dashoffset: -884; }
+}
+@keyframes avere-star-196 {
+  from { stroke-dashoffset: 196; }
+  to { stroke-dashoffset: -804; }
+}
+@keyframes avere-star-286 {
+  from { stroke-dashoffset: 286; }
+  to { stroke-dashoffset: -714; }
+}
+
+@keyframes avere-star-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.65; }
+}
+
+@keyframes avere-star-twinkle {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 2px rgba(147, 197, 253, 0.5)); }
+  50% { opacity: 0.85; filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.85)); }
+}
+
+.avere-nav-border-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.avere-nav-border-svg rect {
+  width: calc(100% - 3px);
+  height: calc(100% - 3px);
+  fill: none;
+}
+
+/* Small bright tip only */
+.avere-star-head-aura {
+  stroke: #60a5fa;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-dasharray: 4.5 995.5;
+  animation:
+    avere-star-0 2.8s linear infinite,
+    avere-star-pulse 1.4s ease-in-out infinite;
+  filter: blur(3.5px);
+}
+
+.avere-star-head {
+  stroke: #ffffff;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-dasharray: 3.5 996.5;
+  animation:
+    avere-star-0 2.8s linear infinite,
+    avere-star-twinkle 1.4s ease-in-out infinite;
+}
+
+.avere-star-head-core {
+  stroke: #f8fafc;
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-dasharray: 2 998;
+  animation: avere-star-0 2.8s linear infinite;
+}
+
+/* Tail behind tip — butt caps, longer = more offset so tips stay aligned */
+.avere-star-near {
+  stroke: #93c5fd;
+  stroke-width: 1.05;
+  stroke-linecap: butt;
+  stroke-dasharray: 18 982;
+  animation: avere-star-14 2.8s linear infinite;
+  opacity: 0.85;
+}
+
+.avere-star-mid {
+  stroke: #3b82f6;
+  stroke-width: 0.8;
+  stroke-linecap: butt;
+  stroke-dasharray: 55 945;
+  animation: avere-star-51 2.8s linear infinite;
+  opacity: 0.5;
+}
+
+.avere-star-far {
+  stroke: #2563eb;
+  stroke-width: 0.55;
+  stroke-linecap: butt;
+  stroke-dasharray: 120 880;
+  animation: avere-star-116 2.8s linear infinite;
+  opacity: 0.26;
+}
+
+.avere-star-tip {
+  stroke: #1d4ed8;
+  stroke-width: 0.4;
+  stroke-linecap: butt;
+  stroke-dasharray: 200 800;
+  animation: avere-star-196 2.8s linear infinite;
+  opacity: 0.13;
+}
+
+.avere-star-wake {
+  stroke: #1e40af;
+  stroke-width: 0.3;
+  stroke-linecap: butt;
+  stroke-dasharray: 290 710;
+  animation: avere-star-286 2.8s linear infinite;
+  filter: blur(0.4px);
+  opacity: 0.07;
 }

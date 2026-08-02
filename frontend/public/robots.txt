@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://bislator.it.com/sitemap.xml
+Sitemap: https://www.avere.example.com/sitemap.xml

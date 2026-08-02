@@ -18,6 +18,15 @@ let networkSchema = new Schema({
     about:{
         type:String,
         required:true
+    },
+ category:{
+        type: Schema.Types.ObjectId,
+        ref: 'Category',
+        required: true
+    },
+    hidden: {
+        type: Boolean,
+        default: false
     }
 },{
     timestamps:true

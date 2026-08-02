@@ -13,11 +13,13 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Link } from 'react-router-dom'
+import ConfirmDialog from "../../components/admin/ConfirmDialog";
 
 function AdminContact() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const fetchContacts = async () => {
     try {
@@ -34,13 +36,14 @@ function AdminContact() {
     fetchContacts();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this message?")) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
 
-    setDeletingId(id);
+    setDeletingId(deleteTarget._id);
     try {
-      await axios.delete(`/api/contactus/${id}`);
-      setData(prev => prev.filter(item => item._id !== id));
+      await axios.delete(`/api/contactus/${deleteTarget._id}`);
+      setData(prev => prev.filter(item => item._id !== deleteTarget._id));
+      setDeleteTarget(null);
       toast.success("Message deleted");
     } catch {
       toast.error("Delete failed");
@@ -58,22 +61,22 @@ function AdminContact() {
   }
 
   return (
-    <section className="min-h-screen bg-gray-100 px-6 py-14">
+    <section className="min-h-screen bg-gray-100 dark:bg-slate-950 px-6 py-14">
       <ToastContainer autoClose={3000} />
 
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-100">
             Contact Messages
           </h1>
-          <p className="text-gray-500">
+          <p className="text-gray-500 dark:text-slate-400">
             Messages sent from Contact Us page
           </p>
         </div>
 
         {/* Table Header (desktop) */}
-        <div className="hidden sm:grid grid-cols-12 bg-gray-200 text-sm font-semibold text-gray-700 px-6 py-4 rounded-t-xl">
+        <div className="hidden sm:grid grid-cols-12 bg-gray-200 dark:bg-slate-800 text-sm font-semibold text-gray-700 dark:text-slate-300 px-6 py-4 rounded-t-xl">
           <div className="col-span-3">User</div>
           <div className="col-span-3">Email</div>
           <div className="col-span-2">Phone</div>
@@ -83,12 +86,12 @@ function AdminContact() {
         </div>
 
         {/* Table Header (mobile) */}
-        <div className="sm:hidden bg-gray-200 text-sm font-semibold text-gray-700 px-6 py-4 rounded-t-xl">
+        <div className="sm:hidden bg-gray-200 dark:bg-slate-800 text-sm font-semibold text-gray-700 dark:text-slate-300 px-6 py-4 rounded-t-xl">
           <span>Messages (tap a row for details)</span>
         </div>
 
         {/* Rows */}
-        <div className="bg-white rounded-b-xl shadow divide-y">
+        <div className="bg-white dark:bg-slate-900 rounded-b-xl shadow divide-y dark:divide-slate-800">
           {data.length === 0 && (
             <div className="text-center py-10 text-gray-400">
               No messages found
@@ -104,7 +107,7 @@ function AdminContact() {
               className="group"
             >
               {/* Desktop Row */}
-              <div className="hidden sm:grid grid-cols-12 px-6 py-5 items-center hover:bg-gray-50">
+              <div className="hidden sm:grid grid-cols-12 px-6 py-5 items-center hover:bg-gray-50 dark:hover:bg-slate-800/80 dark:bg-slate-950">
                 {/* USER */}
                 <div className="col-span-3 flex items-center gap-2">
                   <User className="w-4 h-4 text-blue-600" />
@@ -137,7 +140,7 @@ function AdminContact() {
                 {/* ACTION */}
                 <div className="col-span-1 text-center">
                   <button
-                    onClick={() => handleDelete(item._id)}
+                    onClick={() => setDeleteTarget(item)}
                     disabled={deletingId === item._id}
                     className="text-red-600 hover:text-red-800 disabled:opacity-50"
                   >
@@ -147,7 +150,7 @@ function AdminContact() {
               </div>
 
               {/* Mobile Row */}
-              <div className="sm:hidden px-6 py-4 hover:bg-gray-50">
+              <div className="sm:hidden px-6 py-4 hover:bg-gray-50 dark:hover:bg-slate-800/80 dark:bg-slate-950">
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="text-base font-medium">{item.name}</div>
@@ -156,7 +159,7 @@ function AdminContact() {
                     </div>
                   </div>
                   <button
-                    onClick={() => handleDelete(item._id)}
+                    onClick={() => setDeleteTarget(item)}
                     disabled={deletingId === item._id}
                     className="text-red-600 hover:text-red-800 disabled:opacity-50"
                   >
@@ -164,7 +167,7 @@ function AdminContact() {
                   </button>
                 </div>
 
-                <div className="mt-3 space-y-2 text-sm text-gray-700">
+                <div className="mt-3 space-y-2 text-sm text-gray-700 dark:text-slate-300">
                   <div className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-green-600" />
                     {item.email}
@@ -186,6 +189,21 @@ function AdminContact() {
           ))}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Delete this message?"
+        message={
+          deleteTarget
+            ? `Message from “${deleteTarget.name}” will be permanently removed.`
+            : ''
+        }
+        confirmLabel="Yes"
+        cancelLabel="No"
+        busy={Boolean(deletingId)}
+        onCancel={() => !deletingId && setDeleteTarget(null)}
+        onConfirm={handleDelete}
+      />
     </section>
   );
 }

@@ -1,134 +1,268 @@
 import axios from '../../helper/axios'
+import assetUrl from '../../helper/assetUrl'
+import { validateImageFile } from '../../helper/validateImage'
+import {
+  validateContentForm,
+  hasFieldErrors,
+  normalizeServerErrors,
+} from '../../helper/formValidation'
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import RichTextEditor from '../../components/RichTextEditor'
+import {
+  AdminFormCard,
+  FormSection,
+  FormField,
+  FormErrorBanner,
+  ImageDropzone,
+  FormActions,
+  fieldClass,
+} from '../../components/admin/AdminFormUI'
 
-function securityForm() {
+function SecurityForm() {
   let { id } = useParams()
+  let navigate = useNavigate()
+
   let [title, setTitle] = useState('')
   let [description, setDescription] = useState('')
   let [about, setAbout] = useState('')
-  let [error, setError] = useState({})   // must be object
+  let [hidden, setHidden] = useState(false)
+  let [error, setError] = useState({})
+  let [formError, setFormError] = useState('')
   let [file, setFile] = useState(null)
   let [preview, setPreview] = useState(null)
-  let navigate = useNavigate()
- 
+  let [categories, setCategories] = useState([])
+  let [category, setCategory] = useState('')
+  let [saving, setSaving] = useState(false)
+
+  let clearField = (key) =>
+    setError((prev) => {
+      if (!prev[key]) return prev
+      let next = { ...prev }
+      delete next[key]
+      return next
+    })
+
+  useEffect(() => {
+    let fetchCategories = async () => {
+      let res = await axios.get('/api/publiccategory')
+      if (res.status === 200) setCategories(res.data)
+    }
+    fetchCategories()
+
+    if (!id) return
+
+    let fetchdata = async () => {
+      let res = await axios.get('/api/security/' + id)
+      if (res.status === 200) {
+        setTitle(res.data.title || '')
+        setDescription(res.data.description || '')
+        setAbout(res.data.about || '')
+        setHidden(Boolean(res.data.hidden))
+        setCategory(res.data.category?._id || res.data.category || '')
+
+        let imageData = res.data.photo || res.data.image
+        let imagePath = ''
+        if (Array.isArray(imageData) && imageData.length > 0) {
+          imagePath = imageData[0]
+        } else if (typeof imageData === 'string') {
+          imagePath = imageData
+        }
+        if (imagePath) setPreview(assetUrl(imagePath))
+      }
+    }
+    fetchdata()
+  }, [id])
+
   let createSecurity = async (e) => {
+    e.preventDefault()
+    setFormError('')
+
+    let clientErrors = validateContentForm(
+      { title, description, about, category },
+      { requireCategory: true }
+    )
+    if (file) {
+      let imgErr = validateImageFile(file)
+      if (imgErr) clientErrors.photo = { msg: imgErr }
+    }
+    if (hasFieldErrors(clientErrors)) {
+      setError(clientErrors)
+      return
+    }
+    setError({})
+
     try {
-      e.preventDefault()
-      setError({})   // ✅ FIX
-
-      let security = { title, description, about }
-
-      let res 
+      setSaving(true)
+      let security = { title, description, about, category, hidden }
+      let res
       if (id) {
         res = await axios.patch('/api/security/' + id, security)
       } else {
         res = await axios.post('/api/security', security)
       }
 
-      // upload photo
       if (file) {
         let formData = new FormData()
         formData.set('photo', file)
-
-        await axios.post(`/api/security/${res.data._id}/upload`, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data"
-          }
+        let targetId = id || res.data._id
+        await axios.post(`/api/security/${targetId}/upload`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
         })
       }
 
-      if (res.status === 200) {
-        setError({})   // ✅ FIX
+      if (res.status === 200 || res.status === 201) {
         navigate('/admin/adminSecurity')
       }
-
     } catch (e) {
       if (e.response?.data?.errors) {
-        setError(e.response.data.errors)
+        setError(normalizeServerErrors(e.response.data))
       } else {
-        console.log(e)
+        setFormError(e.response?.data?.msg || e.message || 'Save failed')
       }
+    } finally {
+      setSaving(false)
     }
   }
- 
-  useEffect(() => {
-    if (id) {
-      let fetchdata = async () => {
-        let res = await axios.get('/api/security/' + id)
-        if (res.status === 200) {
-          setTitle(res.data.title)
-          setDescription(res.data.description)
-          setAbout(res.data.about)
-          setPreview( import.meta.env.VITE_BACKEND_ASSET_URL + res.data.photo)
-        }
-      }
-      fetchdata()
-    }
-  }, [id])
 
   let upload = (e) => {
-    let file = e.target.files[0]
-    setFile(file)
-
-    let fileReader = new FileReader()
-    fileReader.onload = (e) => {
-      setPreview(e.target.result)
+    let selected = e.target.files[0]
+    if (!selected) return
+    let imgErr = validateImageFile(selected)
+    if (imgErr) {
+      setFormError(imgErr)
+      setFile(null)
+      e.target.value = ''
+      return
     }
-    fileReader.readAsDataURL(file)
+    setFormError('')
+    setFile(selected)
+    let fileReader = new FileReader()
+    fileReader.onload = (ev) => setPreview(ev.target.result)
+    fileReader.readAsDataURL(selected)
   }
 
   return (
-    <div className="max-w-2xl mx-auto mt-10">
-      <form className="rounded-xl border bg-white p-6 shadow-sm" onSubmit={createSecurity} >
-        <h2 className="text-xl font-semibold mb-6">{id ? 'edit' : 'Create'} Security</h2>
+    <AdminFormCard
+      title={id ? 'Edit security' : 'Create security'}
+      subtitle="Fill each step below. Preview is for the list; About is the full page."
+      onSubmit={createSecurity}
+      footer={
+        <FormActions
+          onCancel={() => navigate('/admin/adminSecurity')}
+          saving={saving}
+          isEdit={!!id}
+        />
+      }
+    >
+      <FormErrorBanner message={formError} errors={error} />
 
-        <div className='mb-4'>
-          <input type="file" onChange={upload}/>
-          {preview && <img src={preview} alt="" />}
-        </div>
+      <FormSection step="1" title="Cover image" hasError={Boolean(error.photo)}>
+        <ImageDropzone
+          preview={preview}
+          onChange={(e) => {
+            clearField('photo')
+            upload(e)
+          }}
+          error={error.photo?.msg}
+        />
+      </FormSection>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Service title</label>
+      <FormSection
+        step="2"
+        title="Basic info"
+        hasError={Boolean(error.title || error.description || error.category)}
+      >
+        <FormField label="Title" required error={error.title?.msg}>
           <input
             value={title}
-            onChange={e=>setTitle(e.target.value)} 
+            onChange={(e) => {
+              setTitle(e.target.value)
+              clearField('title')
+            }}
             type="text"
-            className="w-full rounded-lg border px-3 py-2"
+            placeholder="Security title"
+            className={fieldClass}
+            aria-invalid={Boolean(error.title)}
           />
-          {error?.title && <p className="text-red-600 text-sm">{error.title.msg}</p>}
-        </div>
+        </FormField>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Description</label>
+        <FormField
+          label="List preview"
+          required
+          hint="Short text on the list card"
+          error={error.description?.msg}
+        >
           <textarea
             value={description}
-            onChange={e=>setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value)
+              clearField('description')
+            }}
             rows={3}
-            className="w-full rounded-lg border px-3 py-2"
+            placeholder="One or two short sentences..."
+            className={fieldClass}
+            aria-invalid={Boolean(error.description)}
           />
-          {error?.description && <p className="text-red-600 text-sm">{error.description.msg}</p>}
-        </div>
+        </FormField>
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-1">About</label>
-          <textarea
+        <FormField label="Category" required error={error.category?.msg}>
+          <select
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value)
+              clearField('category')
+            }}
+            className={fieldClass}
+            aria-invalid={Boolean(error.category)}
+          >
+            <option value="">Select category</option>
+            {categories.map((c) => (
+              <option key={c._id} value={c._id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
+        </FormField>
+
+        <FormField
+          label="Visibility"
+          hint="Hidden items stay in admin but are not shown on the public site."
+        >
+          <label className="flex items-center gap-3 cursor-pointer select-none rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3">
+            <input
+              type="checkbox"
+              checked={hidden}
+              onChange={(e) => setHidden(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm text-slate-800 dark:text-slate-200">
+              Hide from public site
+            </span>
+          </label>
+        </FormField>
+      </FormSection>
+
+      <FormSection step="3" title="Full detail" hasError={Boolean(error.about)}>
+        <FormField
+          label="About"
+          required
+          hint="Shown on the detail page — use the toolbar"
+          error={error.about?.msg}
+        >
+          <RichTextEditor
             value={about}
-            onChange={e=>setAbout(e.target.value)}
-            rows={5}
-            className="w-full rounded-lg border px-3 py-2"
+            onChange={(v) => {
+              setAbout(v)
+              clearField('about')
+            }}
+            placeholder="Write the full security detail..."
+            minHeightClass="min-h-[220px]"
           />
-          {error?.about && <p className="text-red-600 text-sm">{error.about.msg}</p>}
-        </div>
-
-        <div className="flex justify-end gap-3">
-          <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-white">
-            {id ? "edit" : "Create"}
-          </button>
-        </div>
-      </form>
-    </div>
+        </FormField>
+      </FormSection>
+    </AdminFormCard>
   )
 }
 
-export default securityForm
+export default SecurityForm

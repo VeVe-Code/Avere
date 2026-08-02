@@ -1,18 +1,19 @@
 let express = require('express')
 const categorycontroller = require('../controller/categorycontroller')
-const { body, validationResult } = require('express-validator');
+const { body } = require('express-validator');
 const handleerrormsg = require('../middleware/handleerrormsg');
+const { AuthMiddleware, requireAdmin } = require('../middleware/AuthMiddleware');
+const adminOnly = [AuthMiddleware, requireAdmin];
 
 let router = express.Router()
 
-router.get('/api/category',categorycontroller.index)
-router.post('/api/category',[
+router.get('/api/category', ...adminOnly, categorycontroller.index)
+router.post('/api/category', ...adminOnly, [
     body('title').notEmpty(),
        
 ],handleerrormsg,categorycontroller.store)
-router.get('/api/category/:id',categorycontroller.show)
-router.delete('/api/category/:id',categorycontroller.destory)
-router.patch('/api/category/:id',categorycontroller.update)
+router.get('/api/category/:id', ...adminOnly, categorycontroller.show)
+router.delete('/api/category/:id', ...adminOnly, categorycontroller.destory)
+router.patch('/api/category/:id', ...adminOnly, categorycontroller.update)
 
 module.exports = router
-

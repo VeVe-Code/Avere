@@ -1,93 +1,160 @@
 import axios from '../../helper/axios'
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { ArrowLeft } from 'lucide-react'
+import assetUrl from '../../helper/assetUrl'
+import RichTextContent from '../../components/RichTextContent'
 
-function ServiceDetail() {
+function AdminKnowledgeDetail() {
   let { id } = useParams()
   let [data, setData] = useState(null)
+  let [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const resdata = async () => {
-      let res = await axios.get('/api/knowledge/' + id)
-      setData(res.data)
+    let resdata = async () => {
+      try {
+        setLoading(true)
+        let res = await axios.get('/api/knowledge/' + id)
+        setData(res.data)
+      } catch (err) {
+        console.error(err)
+        setData(null)
+      } finally {
+        setLoading(false)
+      }
     }
     resdata()
   }, [id])
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="w-9 h-9 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   if (!data) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <motion.h1
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-2xl font-semibold text-gray-500"
-        >
-          Loading...
-        </motion.h1>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <p className="text-slate-500 dark:text-slate-400 text-sm">Not found</p>
       </div>
     )
   }
 
   return (
-    <section className="min-h-screen bg-gray-50 py-24 px-6 md:px-12 lg:px-24">
-      <motion.div
-        initial={{ opacity: 0, y: 60 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="max-w-6xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden"
-      >
-        {/* Image */}
-        <motion.div
-          initial={{ scale: 1.1 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.8 }}
-          className="h-[320px] md:h-[420px] overflow-hidden"
-        >
-          <img
-            src={import.meta.env.VITE_BACKEND_ASSET_URL + data.photo}
-            alt={data.name}
-            className="w-full h-full object-contain"
-          />
-        </motion.div>
+    <article className="min-h-screen relative pb-16">
+      <div className="pointer-events-none absolute inset-0
+        bg-[radial-gradient(ellipse_at_top,_#eff6ff_0%,_#f8fafc_50%,_#f1f5f9_100%)]
+        dark:bg-[radial-gradient(ellipse_at_top,_#0f172a_0%,_#020617_50%,_#020617_100%)]" />
 
-        {/* Content */}
-        <div className="p-8 md:p-12 space-y-6">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-3xl md:text-4xl font-bold text-gray-900"
-          >
-            {data.name}
-          </motion.h1>
+      <div className="relative z-10 pt-6 sm:pt-10">
+        {data.photo && (
+          <div className="w-full mb-6 sm:mb-8">
+            <div className="mx-auto max-w-5xl px-3 sm:px-6">
+              <div className="overflow-hidden rounded-xl sm:rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 ring-1 ring-slate-200/70 dark:ring-slate-700 shadow-[0_20px_50px_-28px_rgba(15,23,42,0.35)]">
+                <img
+                  src={assetUrl(data.photo)}
+                  alt={data.title}
+                  className="block w-full h-auto max-h-[75vh] object-contain mx-auto"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.35 }}
-            className="text-lg text-gray-600 leading-relaxed"
-          >
-            {data.description}
-          </motion.p>
-
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="border-t pt-6"
+            className="rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white/95 dark:bg-slate-900/95 shadow-[0_24px_60px_-28px_rgba(15,23,42,0.35)] overflow-hidden"
           >
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              About this knowledge
-            </h3>
-            <p className="text-gray-600 leading-relaxed">
-              {data.about}
-            </p>
+            <div className="px-5 sm:px-8 md:px-10 py-8 space-y-8 min-w-0">
+              <Link
+                to="/admin/adminknowledge"
+                className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to list
+              </Link>
+
+              <header className="space-y-3 border-b border-slate-100 dark:border-slate-800 pb-8">
+                {data.createdAt && (
+                  <time className="text-xs font-medium tracking-wide uppercase text-blue-700 dark:text-blue-400">
+                    {new Date(data.createdAt).toLocaleDateString(undefined, {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </time>
+                )}
+                <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white break-words">
+                  {data.title}
+                </h1>
+                {data.description && (
+                  <p className="text-lg text-slate-500 dark:text-slate-400 leading-relaxed break-words">
+                    {data.description}
+                  </p>
+                )}
+              </header>
+
+              <section className="space-y-4">
+                <RichTextContent value={data.about} />
+              </section>
+
+              {data.sections && data.sections.length > 0 && (
+                <div>
+                  {data.sections.map((sec, index) => {
+                    let body = sec.detail || sec.description || ''
+                    return (
+                      <section
+                        key={index}
+                        className="border-t border-slate-100 dark:border-slate-800 pt-10 mt-10 space-y-5 min-w-0"
+                      >
+                        {sec.photo && (
+                          <div className="overflow-hidden rounded-xl bg-slate-100/80 dark:bg-slate-800/80 ring-1 ring-slate-200/70 dark:ring-slate-700">
+                            <img
+                              src={assetUrl(sec.photo)}
+                              className="block w-full h-auto max-h-[70vh] object-contain mx-auto"
+                              alt={sec.title || `block-${index + 1}`}
+                            />
+                          </div>
+                        )}
+                        <div className="space-y-3">
+                          {sec.title && (
+                            <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white break-words">
+                              {sec.title}
+                            </h2>
+                          )}
+                          {body && <RichTextContent value={body} />}
+                        </div>
+                      </section>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </motion.div>
         </div>
-      </motion.div>
-    </section>
+      </div>
+
+      <style>{`
+        .rich-content h1 { font-size: 1.75rem; font-weight: 600; color: #0f172a; margin: 0.75rem 0 0.5rem; }
+        .rich-content h2 { font-size: 1.5rem; font-weight: 600; color: #0f172a; margin: 0.75rem 0 0.5rem; }
+        .rich-content h3 { font-size: 1.25rem; font-weight: 600; color: #1e293b; margin: 0.5rem 0 0.35rem; }
+        .rich-content p { margin: 0.5rem 0; }
+        .rich-content ul { list-style: disc; padding-left: 1.25rem; margin: 0.5rem 0; }
+        .rich-content ol { list-style: decimal; padding-left: 1.25rem; margin: 0.5rem 0; }
+        .rich-content a { color: #2563eb; text-decoration: underline; text-underline-offset: 2px; }
+        .rich-content blockquote { border-left: 3px solid #cbd5e1; padding-left: 0.75rem; color: #64748b; margin: 0.75rem 0; }
+        .rich-content code { background: #f1f5f9; border-radius: 0.25rem; padding: 0.1rem 0.3rem; font-size: 0.875em; }
+        .rich-content pre { background: #0f172a; color: #e2e8f0; border-radius: 0.5rem; padding: 0.75rem 1rem; overflow-x: auto; margin: 0.75rem 0; }
+        .rich-content pre code { background: transparent; color: inherit; padding: 0; }
+        .rich-content strong { font-weight: 600; color: #0f172a; }
+      `}</style>
+    </article>
   )
 }
 
-export default ServiceDetail
+export default AdminKnowledgeDetail

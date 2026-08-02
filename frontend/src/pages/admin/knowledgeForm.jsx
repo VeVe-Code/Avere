@@ -1,218 +1,380 @@
 import axios from "../../helper/axios";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import assetUrl from "../../helper/assetUrl";
+import { validateImageFile } from "../../helper/validateImage";
+import {
+  validateContentForm,
+  hasFieldErrors,
+  normalizeServerErrors,
+} from "../../helper/formValidation";
+import RichTextEditor from "../../components/RichTextEditor";
+import {
+  AdminFormCard,
+  FormSection,
+  FormField,
+  FormErrorBanner,
+  ImageDropzone,
+  FormActions,
+  fieldClass,
+} from "../../components/admin/AdminFormUI";
+
+function emptyBlock() {
+  return { title: "", content: "", file: null, preview: null, photo: null };
+}
 
 function KnowledgeForm() {
+  let { id } = useParams();
+  let navigate = useNavigate();
 
-  const { id } = useParams();
-  const navigate = useNavigate();
+  let [title, setTitle] = useState("");
+  let [description, setDescription] = useState("");
+  let [about, setAbout] = useState("");
+  let [hidden, setHidden] = useState(false);
+  let [file, setFile] = useState(null);
+  let [preview, setPreview] = useState(null);
+  let [blocks, setBlocks] = useState([]);
+  let [error, setError] = useState({});
+  let [formError, setFormError] = useState("");
+  let [saving, setSaving] = useState(false);
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [about, setAbout] = useState("");
+  let clearField = (key) =>
+    setError((prev) => {
+      if (!prev[key]) return prev;
+      let next = { ...prev };
+      delete next[key];
+      return next;
+    });
 
-  const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
+  let createKnowledge = async (e) => {
+    e.preventDefault();
+    setFormError("");
 
-  const [error, setError] = useState({});
+    let clientErrors = validateContentForm({ title, description, about });
+    if (file) {
+      let imgErr = validateImageFile(file);
+      if (imgErr) clientErrors.photo = { msg: imgErr };
+    }
+    if (hasFieldErrors(clientErrors)) {
+      setError(clientErrors);
+      return;
+    }
+    setError({});
 
-  const createKnowledge = async (e) => {
     try {
-      e.preventDefault();
+      setSaving(true);
 
-      const knowledge = {
+      let filteredSections = [];
+      let sectionImages = new FormData();
+      let sectionIndexes = [];
+
+      blocks.forEach((b) => {
+        if (!(b.title || b.content || b.file || b.photo)) return;
+        let idx = filteredSections.length;
+        filteredSections.push({
+          title: b.title || "",
+          description: "",
+          detail: b.content || "",
+          photo: b.photo || null,
+        });
+        if (b.file) {
+          sectionImages.append("photos", b.file);
+          sectionIndexes.push(idx);
+        }
+      });
+
+      let knowledge = {
         title,
         description,
         about,
+        hidden,
+        sections: JSON.stringify(filteredSections),
       };
 
       let res;
-
       if (id) {
         res = await axios.patch("/api/knowledge/" + id, knowledge);
       } else {
         res = await axios.post("/api/knowledge", knowledge);
       }
 
-      // Upload image ONLY if selected
-      if (file) {
-        const formData = new FormData();
-        formData.append("photo", file);
+      let kid = res.data._id;
 
+      if (file) {
+        let formData = new FormData();
+        formData.append("photo", file);
+        await axios.post(`/api/knowledge/${kid}/upload`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
+      if (sectionIndexes.length > 0) {
+        sectionImages.append("indexes", JSON.stringify(sectionIndexes));
         await axios.post(
-          `/api/knowledge/${res.data._id}/upload`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
+          `/api/knowledge/${kid}/sections-upload`,
+          sectionImages,
+          { headers: { "Content-Type": "multipart/form-data" } }
         );
       }
 
-      if (res.status === 200 || res.status === 201) {
-        navigate("/admin/adminknowledge");
-      }
-
+      navigate("/admin/adminknowledge");
     } catch (e) {
       if (e.response?.data?.errors) {
-        setError(e.response.data.errors);
+        setError(normalizeServerErrors(e.response.data));
+      } else {
+        setFormError(
+          e.response?.data?.msg || e.response?.data?.error || "Save failed"
+        );
       }
+    } finally {
+      setSaving(false);
     }
   };
 
   useEffect(() => {
-    if (id) {
-      const fetchUpdateData = async () => {
-        const res = await axios.get("/api/knowledge/" + id);
-
-        if (res.status === 200) {
-          setTitle(res.data.title);
-          setDescription(res.data.description);
-          setAbout(res.data.about);
-
-          if (res.data.photo) {
-            setPreview(
-              import.meta.env.VITE_BACKEND_ASSET_URL + res.data.photo
-            );
-          }
+    if (!id) return;
+    let fetchUpdateData = async () => {
+      let res = await axios.get("/api/knowledge/" + id);
+      if (res.status === 200) {
+        setTitle(res.data.title || "");
+        setDescription(res.data.description || "");
+        setAbout(res.data.about || "");
+        setHidden(Boolean(res.data.hidden));
+        if (res.data.photo) setPreview(assetUrl(res.data.photo));
+        if (res.data.sections?.length) {
+          setBlocks(
+            res.data.sections.map((sec) => ({
+              title: sec.title || "",
+              content: sec.detail || sec.description || "",
+              file: null,
+              preview: sec.photo ? assetUrl(sec.photo) : null,
+              photo: sec.photo || null,
+            }))
+          );
         }
-      };
-
-      fetchUpdateData();
-    }
+      }
+    };
+    fetchUpdateData();
   }, [id]);
 
-  const upload = (e) => {
-    const selectedFile = e.target.files[0];
+  let uploadCover = (e) => {
+    let selected = e.target.files[0];
+    if (!selected) return;
+    let imgErr = validateImageFile(selected);
+    if (imgErr) {
+      setFormError(imgErr);
+      e.target.value = "";
+      return;
+    }
+    setFormError("");
+    setFile(selected);
+    let reader = new FileReader();
+    reader.onload = (ev) => setPreview(ev.target.result);
+    reader.readAsDataURL(selected);
+  };
 
-    if (!selectedFile) return;
+  let addBlock = () => setBlocks((prev) => [...prev, emptyBlock()]);
 
-    setFile(selectedFile);
+  let removeBlock = (index) =>
+    setBlocks((prev) => prev.filter((_, i) => i !== index));
 
-    const fileReader = new FileReader();
+  let updateBlock = (index, field, value) => {
+    setBlocks((prev) => {
+      let next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
 
-    fileReader.onload = (e) => {
-      setPreview(e.target.result);
-    };
-
-    fileReader.readAsDataURL(selectedFile);
+  let uploadBlockImage = (index, e) => {
+    let selected = e.target.files[0];
+    if (!selected) return;
+    let imgErr = validateImageFile(selected);
+    if (imgErr) {
+      setFormError(imgErr);
+      e.target.value = "";
+      return;
+    }
+    setFormError("");
+    setBlocks((prev) => {
+      let next = [...prev];
+      next[index] = {
+        ...next[index],
+        file: selected,
+        preview: URL.createObjectURL(selected),
+      };
+      return next;
+    });
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-10">
+    <AdminFormCard
+      title={id ? "Edit news article" : "Create news article"}
+      subtitle="Step through cover, basics, full article, then optional extra blocks."
+      onSubmit={createKnowledge}
+      footer={
+        <FormActions
+          onCancel={() => navigate("/admin/adminknowledge")}
+          saving={saving}
+          isEdit={!!id}
+          submitLabel={id ? "Update" : "Publish"}
+        />
+      }
+    >
+      <FormErrorBanner message={formError} errors={error} />
 
-      <form
-        className="rounded-xl border bg-white p-6 shadow-sm"
-        onSubmit={createKnowledge}
+      <FormSection step="1" title="Cover image" hasError={Boolean(error.photo)}>
+        <ImageDropzone
+          preview={preview}
+          onChange={(e) => {
+            clearField("photo");
+            uploadCover(e);
+          }}
+          error={error.photo?.msg}
+        />
+      </FormSection>
+
+      <FormSection
+        step="2"
+        title="Basic info"
+        hasError={Boolean(error.title || error.description)}
       >
-
-        <h2 className="text-xl font-semibold mb-6">
-          {id ? "Edit Knowledge" : "Create Knowledge"}
-        </h2>
-
-        {/* Image Upload */}
-        <div className="mb-4">
-          <input type="file" onChange={upload} />
-
-          {preview && (
-            <img
-              src={preview}
-              alt="preview"
-              className="mt-3 w-40 rounded-lg border"
-            />
-          )}
-        </div>
-
-        {/* Title */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
-            Title
-          </label>
-
+        <FormField label="Title" required error={error.title?.msg}>
           <input
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              clearField("title");
+            }}
             type="text"
-            placeholder="Enter title"
-            className="w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Headline"
+            className={fieldClass}
+            aria-invalid={Boolean(error.title)}
           />
+        </FormField>
 
-          {error.title && (
-            <p className="text-red-600 text-sm">
-              {error.title.msg}
-            </p>
-          )}
-        </div>
-
-        {/* Description */}
-        <div className="mb-4">
-
-          <label className="block text-sm font-medium mb-1">
-            Description
-          </label>
-
+        <FormField
+          label="List preview"
+          required
+          hint="About 20 characters shown on the news list"
+          error={error.description?.msg}
+        >
           <textarea
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            placeholder="Short description"
-            className="w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={(e) => {
+              setDescription(e.target.value);
+              clearField("description");
+            }}
+            rows={2}
+            placeholder="Short preview for the list card..."
+            className={fieldClass}
+            aria-invalid={Boolean(error.description)}
           />
+        </FormField>
 
-          {error.description && (
-            <p className="text-red-600 text-sm">
-              {error.description.msg}
-            </p>
-          )}
-
-        </div>
-
-        {/* About */}
-        <div className="mb-6">
-
-          <label className="block text-sm font-medium mb-1">
-            About
+        <FormField
+          label="Visibility"
+          hint="Hidden posts stay in admin but are not shown on the public site."
+        >
+          <label className="flex items-center gap-3 cursor-pointer select-none rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3">
+            <input
+              type="checkbox"
+              checked={hidden}
+              onChange={(e) => setHidden(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm text-slate-800 dark:text-slate-200">
+              Hide from public site
+            </span>
           </label>
+        </FormField>
+      </FormSection>
 
-          <textarea
+      <FormSection step="3" title="Full article" hasError={Boolean(error.about)}>
+        <FormField
+          label="About"
+          required
+          hint="Main body on the detail page — use the toolbar"
+          error={error.about?.msg}
+        >
+          <RichTextEditor
             value={about}
-            onChange={(e) => setAbout(e.target.value)}
-            rows={5}
-            placeholder="Detailed information"
-            className="w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={(v) => {
+              setAbout(v);
+              clearField("about");
+            }}
+            placeholder="Write the full story..."
+            minHeightClass="min-h-[220px]"
           />
+        </FormField>
+      </FormSection>
 
-          {error.about && (
-            <p className="text-red-600 text-sm">
-              {error.about.msg}
-            </p>
-          )}
-
-        </div>
-
-        {/* Buttons */}
-        <div className="flex justify-end gap-3">
-
+      <FormSection step="4" title="Extra content blocks">
+        <div className="flex flex-wrap items-center justify-between gap-3 -mt-1 mb-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Optional. Same image + text layout as the main article.
+          </p>
           <button
             type="button"
-            onClick={() => navigate("/admin/adminknowledge")}
-            className="rounded-lg border px-4 py-2"
+            onClick={addBlock}
+            className="rounded-xl bg-slate-900 text-white text-sm font-medium px-4 py-2 hover:bg-slate-800"
           >
-            Cancel
+            + Add block
           </button>
-
-          <button
-            type="submit"
-            className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-          >
-            {id ? "Update" : "Create"}
-          </button>
-
         </div>
 
-      </form>
-    </div>
+        {!blocks.length && (
+          <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+            No extra blocks yet.
+          </div>
+        )}
+
+        {blocks.map((block, index) => (
+          <div
+            key={index}
+            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 space-y-3"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                Block {index + 1}
+              </span>
+              <button
+                type="button"
+                onClick={() => removeBlock(index)}
+                className="text-sm text-red-600 hover:text-red-700"
+              >
+                Remove
+              </button>
+            </div>
+
+            <ImageDropzone
+              preview={block.preview}
+              onChange={(e) => uploadBlockImage(index, e)}
+              hint="Block image — jpg, png, webp, gif"
+            />
+
+            <FormField label="Title (optional)">
+              <input
+                type="text"
+                value={block.title}
+                onChange={(e) => updateBlock(index, "title", e.target.value)}
+                placeholder="Block heading"
+                className={fieldClass}
+              />
+            </FormField>
+
+            <FormField label="Text">
+              <RichTextEditor
+                value={block.content}
+                onChange={(html) => updateBlock(index, "content", html)}
+                placeholder="Text for this block..."
+                minHeightClass="min-h-[120px]"
+              />
+            </FormField>
+          </div>
+        ))}
+      </FormSection>
+    </AdminFormCard>
   );
 }
 

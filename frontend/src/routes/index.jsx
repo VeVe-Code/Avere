@@ -1,6 +1,4 @@
-import React, { useContext } from 'react'
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import React from 'react'
 import Home from '../pages/home.jsx'
 import About from '../pages/about.jsx'
 import AdminService from '../pages/admin/adminservice.jsx'
@@ -15,6 +13,7 @@ import App from '../App.jsx'
 import AdminLayout from '../AdminLayout.jsx'
 import ServiceForm from '../pages/admin/serviceForm.jsx'
 import KnowledgeForm from '../pages/admin/knowledgeForm.jsx'
+import Product from '../pages/product.jsx'
 import AdminSecerity from '../pages/admin/adminsecurity.jsx'
 import SecurityForm from "../pages/admin/securityForm.jsx"
 import AdminSystem from "../pages/admin/adminsystem.jsx"
@@ -23,7 +22,7 @@ import AdminNetWork from "../pages/admin/adminnetwork.jsx"
 import NetWorkForm from '../pages/admin/networkForm.jsx'
 import RegisterForm from '../pages/admin/registerForm.jsx'
 import LoginForm from '../pages/admin/LoginForm.jsx'
-import { AuthContext } from '../contexts/AuthContext.jsx'
+import VerifyEmail from '../pages/VerifyEmail.jsx'
 
 import System from '../pages/system.jsx'
 import Network from '../pages/network.jsx'
@@ -42,10 +41,23 @@ import AdminSystemDetail from '../pages/admin/adminsystemdetail.jsx'
 import AdminNetWorkDetail from '../pages/admin/adminnetworkdetail.jsx'
 import AdminCategory from '../pages/admin/admincategory.jsx'
 import AdminContactus from '../pages/admin/admincontact.jsx'
+import Adminevents from '../pages/admin/adminevents.jsx' 
+import EventsForm from '../pages/admin/eventsForm.jsx'
+import AdminEventDetail from '../pages/admin/admineventdetail.jsx'
 import Contactus from '../pages/contactus.jsx'
+import Events from "../pages/Events.jsx"
+import EventDetail from '../pages/EventDetail.jsx'
 import AdminContactusDetail from '../pages/admin/admincontactdetail.jsx'
+import Position from '../pages/position.jsx'
+import PositionDetail from '../pages/positiondetail.jsx'
+import AdminPosition from '../pages/admin/adminposition.jsx'
+import AdminPositionDetail from '../pages/admin/adminpositiondetail.jsx'
+import AdminSettings from '../pages/admin/adminsettings.jsx'
+import AdminUsers from '../pages/admin/adminusers.jsx'
+import Library from '../pages/library.jsx'
+import Profile from '../pages/profile.jsx'
+import Settings from '../pages/settings.jsx'
 function Index() {
-    let {user}=useContext(AuthContext)
     const router = createBrowserRouter([
   {
     path: "/",
@@ -55,9 +67,37 @@ function Index() {
         path : "/",
         element: <Home></Home>
       },
+{
+        path : "/product",
+        element: <Product></Product>
+      },
       {
         path : "/about",
         element: <About></About>
+      },
+      {
+        path : "/login",
+        element: <LoginForm />
+      },
+      {
+        path : "/register",
+        element: <RegisterForm />
+      },
+      {
+        path : "/verify-email",
+        element: <VerifyEmail />
+      },
+      {
+        path : "/library",
+        element: <Library />
+      },
+      {
+        path : "/profile",
+        element: <Profile />
+      },
+      {
+        path : "/settings",
+        element: <Settings />
       },
      
        {
@@ -103,7 +143,23 @@ function Index() {
       {
         path : "/contactus",
         element: <Contactus></Contactus>
-      }
+      },
+         {
+        path : "/events",
+        element: <Events></Events>
+      },
+      {
+        path : "/events/:id",
+        element: <EventDetail></EventDetail>
+      },
+      {
+        path : "/position",
+        element: <Position></Position>
+      },
+      {
+        path : "/position/:id",
+        element: <PositionDetail></PositionDetail>
+      },
       
     ]
   },
@@ -113,11 +169,11 @@ function Index() {
     children: [
       {
         path : "adminservice",
-        element:  user ? <AdminService></AdminService> : <Navigate to={'/admin/login'}/>
+        element: <AdminService></AdminService>
       },
       {
         path : "adminservice/:id",
-        element:  user ? <AdminServiceDetail></AdminServiceDetail> : <Navigate to={'/admin/login'}/>
+        element: <AdminServiceDetail></AdminServiceDetail>
       },
        {
         path : "adminservice/create",
@@ -195,6 +251,22 @@ function Index() {
         element:<AdminCategory></AdminCategory>
       },
       {
+        path:"adminevents",
+        element:<Adminevents></Adminevents>
+      },
+      {
+        path:"adminevents/:id",
+        element:<AdminEventDetail></AdminEventDetail>
+      },
+      {
+        path:"adminevents/create",
+        element:<EventsForm></EventsForm>
+      },
+      {
+        path:"adminevents/edit/:id",
+        element:<EventsForm></EventsForm>
+      },
+      {
         path:"admincontactus",
         element:<AdminContactus></AdminContactus>
       },
@@ -203,14 +275,28 @@ function Index() {
         element:<AdminContactusDetail></AdminContactusDetail>
       },
       {
+        path:"adminposition",
+        element:<AdminPosition></AdminPosition>
+      },
+      {
+        path:"adminposition/:id",
+        element:<AdminPositionDetail></AdminPositionDetail>
+      },
+      {
+        path:"adminusers",
+        element:<AdminUsers></AdminUsers>
+      },
+      {
+        path:"adminsettings",
+        element:<AdminSettings />
+      },
+      {
         path:"register",
-        element:!user ? <RegisterForm></RegisterForm> : <Navigate to={'/admin/adminservice'}/>
-    
+        element: <Navigate to="/register" replace />
        },
             {
         path:"login",
-        element: !user ? <LoginForm></LoginForm>  : <Navigate to={'/admin/adminservice'}/>
-      
+        element: <Navigate to="/login" replace />
       }
       
       

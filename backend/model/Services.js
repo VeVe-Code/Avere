@@ -21,6 +21,10 @@ let serviceSchema = new Schema({
     type: Schema.Types.ObjectId,   // 🔗 Category ID
     ref: 'Category',               // 🔗 Category model
     required: true
+  },
+  hidden: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

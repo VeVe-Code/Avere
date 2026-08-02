@@ -1,19 +1,21 @@
 let express = require("express")
 let systemscontroller = require('../controller/systemscontroller')
 const handleerrormsg = require("../middleware/handleerrormsg")
-const { body, validationResult } = require('express-validator');
+const { body } = require('express-validator');
 let upload = require('../helpers/upload')
+const { AuthMiddleware, requireAdmin } = require('../middleware/AuthMiddleware');
+const adminOnly = [AuthMiddleware, requireAdmin];
 
 let router = express.Router()
 
-router.get('/api/systems', systemscontroller.index)
-router.post('/api/systems', [
+router.get('/api/systems', ...adminOnly, systemscontroller.index)
+router.post('/api/systems', ...adminOnly, [
     body('title').notEmpty(),
     body('description').notEmpty(),
     body('about').notEmpty()        
 ],handleerrormsg,systemscontroller.store)
-router.get('/api/systems/:id', systemscontroller.show)
-router.post('/api/systems/:id/upload',[
+router.get('/api/systems/:id', ...adminOnly, systemscontroller.show)
+router.post('/api/systems/:id/upload', ...adminOnly, [
     upload.single('photo'),
      body('photo').custom((value,{req})=>{
         if(!req.file){
@@ -29,8 +31,9 @@ router.post('/api/systems/:id/upload',[
     )
     
 ], handleerrormsg, systemscontroller.upload)
-router.delete('/api/systems/:id', systemscontroller.destroy)
-router.patch('/api/systems/:id', systemscontroller.update)
+router.delete('/api/systems/:id', ...adminOnly, systemscontroller.destroy)
+router.patch('/api/systems/:id', ...adminOnly, systemscontroller.update)
+router.patch('/api/systems/:id/hidden', ...adminOnly, systemscontroller.toggleHidden)
 
 
 

@@ -1,22 +1,22 @@
 let express = require('express');
 const serviceController = require('../controller/servicecontroller');
-const { body, validationResult } = require('express-validator');
+const { body } = require('express-validator');
 const handleerrormsg = require('../middleware/handleerrormsg');
-let AuthMiddleware = require('../middleware/AuthMiddleware')
+let { AuthMiddleware, requireAdmin } = require('../middleware/AuthMiddleware')
 let router = express.Router()
 let upload = require('../helpers/upload')
+const adminOnly = [AuthMiddleware, requireAdmin]
 
 
-
-router.get("",serviceController.index);
-router.post("",[
+router.get("", ...adminOnly, serviceController.index);
+router.post("", ...adminOnly, [
     body('name').notEmpty(),
     body('description').notEmpty(),
     body('about').notEmpty()        
 ],handleerrormsg,
  serviceController.create);
-router.get("/:id", serviceController.show);
-router.post("/:id/upload", [upload.single('photo'),
+router.get("/:id", ...adminOnly, serviceController.show);
+router.post("/:id/upload", ...adminOnly, [upload.single('photo'),
     body('photo').custom((value,{req})=>{
         if(!req.file){
             throw new Error('photo is requried')
@@ -27,8 +27,9 @@ router.post("/:id/upload", [upload.single('photo'),
         return true
     })
 ],handleerrormsg, serviceController.upload);
-router.patch("/:id", serviceController.update);
-router.delete("/:id", serviceController.destory);   
+router.patch("/:id", ...adminOnly, serviceController.update);
+router.patch("/:id/hidden", ...adminOnly, serviceController.toggleHidden);
+router.delete("/:id", ...adminOnly, serviceController.destory);   
 
 
 
