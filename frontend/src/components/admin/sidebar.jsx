@@ -5,7 +5,7 @@ import {
   LogOut,
   Home,
   Wrench,
-  Tags,
+  FileText,
   Newspaper,
   CalendarDays,
   Network,
@@ -13,8 +13,12 @@ import {
   Shield,
   Briefcase,
   Mail,
+  MapPin,
   Users,
   Settings,
+  Images,
+  Handshake,
+  Package,
 } from 'lucide-react'
 import axios from '../../helper/axios'
 import { AuthContext } from '../../contexts/AuthContext'
@@ -34,14 +38,18 @@ export default function Sidebar({ open, onClose }) {
   }
 
   let menu = [
+    { name: 'Hero Slides', path: '/admin/adminheroslides', icon: Images },
+    { name: 'Partners', path: '/admin/adminpartners', icon: Handshake },
+    { name: 'Products', path: '/admin/adminproducts', icon: Package },
     { name: 'Service', path: '/admin/adminservice', icon: Wrench },
-    { name: 'Categories', path: '/admin/adminCategories', icon: Tags },
     { name: 'Knowledge', path: '/admin/adminknowledge', icon: Newspaper },
+    { name: 'News', path: '/admin/adminnews', icon: FileText },
     { name: 'Events', path: '/admin/adminevents', icon: CalendarDays },
     { name: 'Network', path: '/admin/adminnetwork', icon: Network },
     { name: 'Systems', path: '/admin/adminsystems', icon: Server },
     { name: 'Security', path: '/admin/adminSecurity', icon: Shield },
     { name: 'Hiring Positions', path: '/admin/adminposition', icon: Briefcase },
+    { name: 'Contact Info', path: '/admin/admincontactinfo', icon: MapPin },
     { name: 'Contact Data', path: '/admin/admincontactus', icon: Mail },
     {
       name: 'Users',

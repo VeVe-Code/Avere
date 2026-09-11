@@ -32,7 +32,7 @@ function Product() {
     const run = async () => {
       try {
         const res = await axios.get('/api/publiccategory')
-        const cats = res.data || []
+        const cats = Array.isArray(res.data) ? res.data : (res.data?.data || [])
         const found = cats.find((c) => c._id === categoryId)
         setCategoryTitle(found ? found.title : 'All')
       } catch {

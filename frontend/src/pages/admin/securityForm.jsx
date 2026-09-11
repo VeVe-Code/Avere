@@ -18,6 +18,8 @@ import {
   FormActions,
   fieldClass,
 } from '../../components/admin/AdminFormUI'
+import DisplayDateField from '../../components/admin/DisplayDateField.jsx'
+import { displayDateToApi, formatDateForInput, todayDateInput } from '../../helper/displayDate.js'
 
 function SecurityForm() {
   let { id } = useParams()
@@ -27,6 +29,7 @@ function SecurityForm() {
   let [description, setDescription] = useState('')
   let [about, setAbout] = useState('')
   let [hidden, setHidden] = useState(false)
+  let [displayDate, setDisplayDate] = useState(todayDateInput())
   let [error, setError] = useState({})
   let [formError, setFormError] = useState('')
   let [file, setFile] = useState(null)
@@ -46,7 +49,9 @@ function SecurityForm() {
   useEffect(() => {
     let fetchCategories = async () => {
       let res = await axios.get('/api/publiccategory')
-      if (res.status === 200) setCategories(res.data)
+      if (res.status === 200) {
+        setCategories(Array.isArray(res.data) ? res.data : (res.data?.data || []))
+      }
     }
     fetchCategories()
 
@@ -59,6 +64,7 @@ function SecurityForm() {
         setDescription(res.data.description || '')
         setAbout(res.data.about || '')
         setHidden(Boolean(res.data.hidden))
+        setDisplayDate(formatDateForInput(res.data.displayDate || res.data.createdAt))
         setCategory(res.data.category?._id || res.data.category || '')
 
         let imageData = res.data.photo || res.data.image
@@ -94,7 +100,7 @@ function SecurityForm() {
 
     try {
       setSaving(true)
-      let security = { title, description, about, category, hidden }
+      let security = { title, description, about, category, hidden, displayDate: displayDateToApi(displayDate) }
       let res
       if (id) {
         res = await axios.patch('/api/security/' + id, security)
@@ -223,6 +229,10 @@ function SecurityForm() {
               </option>
             ))}
           </select>
+        </FormField>
+
+        <FormField label="Display date" hint="Used when list sorting is set to Display date.">
+          <DisplayDateField value={displayDate} onChange={setDisplayDate} />
         </FormField>
 
         <FormField

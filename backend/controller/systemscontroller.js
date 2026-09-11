@@ -2,6 +2,22 @@ const { default: mongoose } = require("mongoose")
 const Systems = require("../model/Systems")
 let removeFile = require('../helpers/removeFile')
 const { parseBool, excludeHidden } = require('../helpers/visibility')
+const {
+  CATALOG_SORT,
+  ORDER_SORT,
+  makeReorderHandler,
+  makeTogglePinnedHandler,
+  makeMoveHandler,
+  makeSwitchHandler,
+  makeNormalizeHandler,
+  parseOrderField,
+} = require('../helpers/catalogOrder')
+const {
+  resolveListSort,
+  getSortMode,
+  displayDateForCreate,
+  applyDisplayDateUpdate,
+} = require('../helpers/catalogSort')
 
 async function listSystems(req, res, { publicOnly = false } = {}) {
   try {
@@ -17,7 +33,8 @@ async function listSystems(req, res, { publicOnly = false } = {}) {
 
     let limit = 6
     let page = parseInt(req.query.page, 10) || 1
-    let systems = await Systems.find(query).populate('category', 'title').skip((page - 1) * limit).limit(limit).sort({ createdAt: -1 })
+    const sort = await resolveListSort('systems', { publicOnly })
+    let systems = await Systems.find(query).populate('category', 'title').skip((page - 1) * limit).limit(limit).sort(sort)
     let totalsystems = await Systems.countDocuments(query)
     let totalPage = Math.max(1, Math.ceil(totalsystems / limit))
 
@@ -33,10 +50,10 @@ async function listSystems(req, res, { publicOnly = false } = {}) {
       links.loopsablelinks.push({ number })
     }
 
-    return res.json({
-      data: systems,
-      links
-    })
+    res.set('Cache-Control', 'no-store')
+    const payload = { data: systems, links }
+    if (!publicOnly) payload.sortMode = await getSortMode('systems')
+    return res.json(payload)
   } catch (e) {
     return res.status(500).json({ msg: "server error" })
   }
@@ -49,13 +66,16 @@ let systemscontroller = {
 
   store: async (req, res) => {
     try {
-      let { title, description, about, category, hidden } = req.body
+      let { title, description, about, category, hidden, pinned, order } = req.body
       let system = await Systems.create({
         title,
         description,
         about,
         category,
-        hidden: parseBool(hidden, false)
+        hidden: parseBool(hidden, false),
+        pinned: parseBool(pinned, false),
+        order: parseOrderField(order, 0),
+        displayDate: displayDateForCreate(req.body),
       })
       return res.json(system)
     }
@@ -134,6 +154,13 @@ let systemscontroller = {
       if (updateData.hidden !== undefined) {
         updateData.hidden = parseBool(updateData.hidden, false);
       }
+      if (updateData.pinned !== undefined) {
+        updateData.pinned = parseBool(updateData.pinned, false);
+      }
+      if (updateData.order !== undefined) {
+        updateData.order = parseOrderField(updateData.order, 0);
+      }
+      applyDisplayDateUpdate(updateData, req.body)
       delete updateData.photo;
 
       let system = await Systems.findByIdAndUpdate(id, updateData, { new: true });
@@ -166,6 +193,12 @@ let systemscontroller = {
       return res.status(500).json({ msg: "server error" })
     }
   },
+
+  togglePinned: makeTogglePinnedHandler(Systems, 'system not Found'),
+  reorder: makeReorderHandler(Systems, ORDER_SORT, 'systems'),
+  normalizeOrders: makeNormalizeHandler(Systems, ORDER_SORT, 'systems'),
+  move: makeMoveHandler(Systems, ORDER_SORT, 'systems'),
+  switch: makeSwitchHandler(Systems, ORDER_SORT, 'systems'),
 
   upload: async (req, res) => {
     try {

@@ -8,9 +8,10 @@ const adminOnly = [AuthMiddleware, requireAdmin];
 let router = express.Router()
 
 router.get('/api/category', ...adminOnly, categorycontroller.index)
+router.get('/api/category/meta', ...adminOnly, categorycontroller.categories)
 router.post('/api/category', ...adminOnly, [
     body('title').notEmpty(),
-       
+    body('category').notEmpty(),
 ],handleerrormsg,categorycontroller.store)
 router.get('/api/category/:id', ...adminOnly, categorycontroller.show)
 router.delete('/api/category/:id', ...adminOnly, categorycontroller.destory)

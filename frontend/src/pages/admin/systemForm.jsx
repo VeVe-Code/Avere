@@ -18,6 +18,8 @@ import {
   FormActions,
   fieldClass,
 } from '../../components/admin/AdminFormUI'
+import DisplayDateField from '../../components/admin/DisplayDateField.jsx'
+import { displayDateToApi, formatDateForInput, todayDateInput } from '../../helper/displayDate.js'
 
 function SystemForm() {
   let { id } = useParams()
@@ -27,6 +29,7 @@ function SystemForm() {
   let [description, setDescription] = useState('')
   let [about, setAbout] = useState('')
   let [hidden, setHidden] = useState(false)
+  let [displayDate, setDisplayDate] = useState(todayDateInput())
   let [file, setFile] = useState(null)
   let [preview, setPreview] = useState(null)
   let [error, setError] = useState({})
@@ -63,7 +66,7 @@ function SystemForm() {
 
     try {
       setSaving(true)
-      let system = { title, about, description, category, hidden }
+      let system = { title, about, description, category, hidden, displayDate: displayDateToApi(displayDate) }
       let res
 
       if (id) {
@@ -98,7 +101,9 @@ function SystemForm() {
   useEffect(() => {
     let fetchCategories = async () => {
       let res = await axios.get('/api/publiccategory')
-      if (res.status === 200) setCategories(res.data)
+      if (res.status === 200) {
+        setCategories(Array.isArray(res.data) ? res.data : (res.data?.data || []))
+      }
     }
     fetchCategories()
 
@@ -111,6 +116,7 @@ function SystemForm() {
         setDescription(res.data.description || '')
         setAbout(res.data.about || '')
         setHidden(Boolean(res.data.hidden))
+        setDisplayDate(formatDateForInput(res.data.displayDate || res.data.createdAt))
         setCategory(res.data.category?._id || res.data.category || '')
         if (res.data.photo) setPreview(assetUrl(res.data.photo))
       }
@@ -216,6 +222,10 @@ function SystemForm() {
               </option>
             ))}
           </select>
+        </FormField>
+
+        <FormField label="Display date" hint="Used when list sorting is set to Display date.">
+          <DisplayDateField value={displayDate} onChange={setDisplayDate} />
         </FormField>
 
         <FormField

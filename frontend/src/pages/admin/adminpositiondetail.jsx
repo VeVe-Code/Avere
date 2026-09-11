@@ -138,7 +138,7 @@ function AdminPositionDetail() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.35 }}
-            className="text-lg text-gray-600 dark:text-slate-400 leading-relaxed break-all"
+            className="text-lg text-gray-600 dark:text-slate-400 leading-relaxed break-words"
           >
             {position.description}
           </motion.p>
@@ -168,7 +168,7 @@ function AdminPositionDetail() {
                   </a>
                 )}
               >
-                <div className="space-y-2 min-w-0 break-all overflow-hidden">
+                <div className="space-y-2 min-w-0 break-words overflow-hidden">
                   {isList ? (
                     <ul className="list-disc pl-5 space-y-1">
                       {lines.map((line, idx) => (

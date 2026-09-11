@@ -69,7 +69,7 @@ function admincontactdetail() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.35 }}
-            className="text-lg text-gray-600 dark:text-slate-400 leading-relaxed break-all"
+            className="text-lg text-gray-600 dark:text-slate-400 leading-relaxed break-words"
           >
             {data.email}
           </motion.p>
@@ -77,7 +77,7 @@ function admincontactdetail() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.35 }}
-            className="text-lg text-gray-600 dark:text-slate-400 leading-relaxed break-all"
+            className="text-lg text-gray-600 dark:text-slate-400 leading-relaxed break-words"
           >
             {data.phno}
           </motion.p>

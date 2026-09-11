@@ -5,6 +5,7 @@ let Security = require('../model/Security')
 let Network = require('../model/Network')
 let Services = require('../model/Services')
 let Knowledge = require('../model/Knowledge')
+let News = require('../model/News')
 let Events = require('../model/Events')
 let Position = require('../model/Position')
 
@@ -31,7 +32,7 @@ router.get('/api/publicsearch', async (req, res) => {
       $or: [{ name: regex }, { description: regex }],
     }
 
-    let [services, network, systems, security, knowledge, events, positions] =
+    let [services, network, systems, security, knowledge, news, events, positions] =
       await Promise.all([
         Services.find(serviceOr)
           .select('name description photo')
@@ -50,6 +51,10 @@ router.get('/api/publicsearch', async (req, res) => {
           .sort({ createdAt: -1 })
           .limit(limit),
         Knowledge.find(descOrTitle)
+          .select('title description photo')
+          .sort({ createdAt: -1 })
+          .limit(limit),
+        News.find(descOrTitle)
           .select('title description photo')
           .sort({ createdAt: -1 })
           .limit(limit),
@@ -108,6 +113,15 @@ router.get('/api/publicsearch', async (req, res) => {
         description: d.description,
         photo: d.photo,
         href: `/knowledge/${d._id}`,
+      })),
+      ...news.map((d) => ({
+        id: d._id,
+        type: 'news',
+        label: 'News',
+        title: d.title,
+        description: d.description,
+        photo: d.photo,
+        href: `/news/${d._id}`,
       })),
       ...events.map((d) => ({
         id: d._id,

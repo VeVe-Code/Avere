@@ -1,5 +1,6 @@
 let User = require('../model/User')
 let Knowledge = require('../model/Knowledge')
+let News = require('../model/News')
 let Service = require('../model/Services')
 let Systems = require('../model/Systems')
 let Network = require('../model/Network')
@@ -8,16 +9,17 @@ let Events = require('../model/Events')
 let createToken = require('../helpers/createToken')
 let toSafeUser = require('../helpers/toSafeUser')
 let cookieOptions = require('../helpers/cookieOptions')
-let { sendVerificationOtp, smtpConfigured } = require('../helpers/mail')
+let { sendVerificationOtp, mailConfigured } = require('../helpers/mail')
 let lineAuth = require('../helpers/lineAuth')
 let googleAuth = require('../helpers/googleAuth')
 
 let maxAge = 3 * 24 * 60 * 60 * 1000
 
-let allowedTypes = ['knowledge', 'service', 'system', 'network', 'security', 'events']
+let allowedTypes = ['knowledge', 'news', 'service', 'system', 'network', 'security', 'events']
 
 let modelByType = {
   knowledge: Knowledge,
+  news: News,
   service: Service,
   system: Systems,
   network: Network,
@@ -27,6 +29,7 @@ let modelByType = {
 
 let pathByType = {
   knowledge: '/knowledge/',
+  news: '/news/',
   service: '/service/',
   system: '/system/',
   network: '/network/',
@@ -35,7 +38,8 @@ let pathByType = {
 }
 
 let labelByType = {
-  knowledge: 'News',
+  knowledge: 'Knowledge',
+  news: 'News',
   service: 'Service',
   system: 'System',
   network: 'Network',
@@ -183,7 +187,7 @@ let usercontroller = {
         message: mailResult.preview
           ? 'Account created. SMTP is not configured — check the server console for your OTP.'
           : 'Account created. Check your email for the verification code.',
-        smtpConfigured: smtpConfigured(),
+        smtpConfigured: mailConfigured(),
       })
 
     } catch (e) {
@@ -253,7 +257,7 @@ let usercontroller = {
         message: mailResult.preview
           ? 'OTP printed in server console (SMTP not configured).'
           : 'A new verification code was sent to your email.',
-        smtpConfigured: smtpConfigured(),
+        smtpConfigured: mailConfigured(),
       })
     } catch (e) {
       return res.status(400).json({ error: e.message })

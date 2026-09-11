@@ -5,9 +5,18 @@ import axios from '../helper/axios'
 import { Menu, X, ChevronDown, Search } from 'lucide-react'
 import { AuthContext } from '../contexts/AuthContext'
 import { useI18n } from '../contexts/I18nContext'
+import { useTheme } from '../contexts/ThemeContext'
 import SearchModal from './SearchModal'
+import ProductMegaMenu from './ProductMegaMenu'
+import {
+  PRODUCT_CATEGORIES,
+  PRODUCT_CATEGORY_META,
+  groupProductsByCategory,
+  normalizeCategoryList,
+} from '../constants/productCategories'
 
 function Navbar() {
+  let [productGroups, setProductGroups] = useState([])
   let [data, setData] = useState([])
   let [loading, setLoading] = useState(true)
   let [open, setOpen] = useState(false)
@@ -17,12 +26,24 @@ function Navbar() {
   let [searchOpen, setSearchOpen] = useState(false)
   let [hoveredId, setHoveredId] = useState(null)
   let [pill, setPill] = useState({ x: 0, w: 0, o: 0 })
+  let [isDark, setIsDark] = useState(() =>
+    typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+  )
   let rowRef = useRef(null)
   let refs = useRef({})
   let { user, dispatch } = useContext(AuthContext)
   let { t } = useI18n()
+  let { theme } = useTheme()
   let navigate = useNavigate()
   let location = useLocation()
+
+  useEffect(() => {
+    let sync = () => setIsDark(document.documentElement.classList.contains('dark'))
+    sync()
+    let obs = new MutationObserver(sync)
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => obs.disconnect()
+  }, [theme])
 
   let logout = async () => {
     try {
@@ -61,14 +82,38 @@ function Navbar() {
     let fetchdata = async () => {
       try {
         let res = await axios.get('/api/publiccategory')
-        setData(res.data || [])
+        let list = normalizeCategoryList(res.data)
+        let groups =
+          Array.isArray(res.data?.groups) && res.data.groups.length
+            ? res.data.groups
+            : groupProductsByCategory(list)
+        setData(list)
+        setProductGroups(
+          groups.length
+            ? groups
+            : PRODUCT_CATEGORIES.map((category) => ({
+                category,
+                description: PRODUCT_CATEGORY_META[category] || '',
+                items: [],
+              }))
+        )
       } catch (err) {
         setData([])
+        setProductGroups(
+          PRODUCT_CATEGORIES.map((category) => ({
+            category,
+            description: PRODUCT_CATEGORY_META[category] || '',
+            items: [],
+          }))
+        )
       } finally {
         setLoading(false)
       }
     }
     fetchdata()
+  }, [])
+
+  useEffect(() => {
     let onScroll = () => setScrolled(window.scrollY > 10)
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -91,6 +136,7 @@ function Navbar() {
     {
       id: 'product',
       name: t('nav.product'),
+      mega: true,
       wide: true,
       dropdown: loading
         ? [{ name: t('nav.loading'), path: '#' }]
@@ -101,10 +147,15 @@ function Navbar() {
     },
     {
       id: 'news',
+      name: t('nav.news'),
+      path: '/news',
+    },
+    {
+      id: 'knowledgeEvents',
       name: t('nav.newsEvents'),
       wide: false,
       dropdown: [
-        { name: t('nav.news'), path: '/knowledge' },
+        { name: t('nav.knowledge'), path: '/knowledge' },
         { name: t('nav.events'), path: '/events' },
       ],
     },
@@ -119,6 +170,7 @@ function Navbar() {
       (sub) =>
         sub.path !== '#' &&
         (location.pathname === sub.path ||
+          location.pathname.startsWith(sub.path + '/') ||
           location.pathname + location.search === sub.path)
     )
   }
@@ -167,7 +219,7 @@ function Navbar() {
       window.removeEventListener('resize', run)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname, location.search, loading, data, scrolled])
+  }, [location.pathname, location.search, loading, data, productGroups, scrolled])
 
   return (
     <div
@@ -221,35 +273,17 @@ function Navbar() {
               scrolled ? 'h-16 px-4 sm:px-5' : 'h-[5.75rem] px-5 sm:px-7'
             }`}
           >
-            {/* Logo */}
-            <Link to="/" className={`relative z-20 flex items-center shrink-0 pl-0.5 group ${
-              scrolled ? 'gap-3' : 'gap-3.5'
-            }`}>
+            {/* Logo — light navy text / dark white text + lifted icon folds */}
+            <Link to="/" className="relative z-20 flex items-center shrink-0 pl-0.5 group">
               <motion.img
-                src="/myphoto2.jpg"
-                alt="Avere"
-                whileHover={{ scale: 1.06, rotate: -2 }}
+                key={isDark ? 'logo-dark' : 'logo-light'}
+                src={isDark ? '/logo-dark.png?v=5' : '/logo.png?v=5'}
+                alt="Avere Ricco"
+                whileHover={{ scale: 1.03 }}
                 transition={{ type: 'spring', stiffness: 360, damping: 16 }}
-                className={`rounded-2xl object-cover shadow-lg shadow-blue-500/15
-                  ring-1 ring-slate-200 dark:ring-white/20 transition-[width,height] duration-300
-                  ${scrolled ? 'h-11 w-11' : 'h-16 w-16'}`}
+                className={`w-auto max-w-[min(52vw,220px)] object-contain object-left transition-[height] duration-300
+                  ${scrolled ? 'h-10 sm:h-11' : 'h-12 sm:h-14'}`}
               />
-              <motion.div
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.15, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="hidden sm:block leading-none"
-              >
-                <div className={`font-bold tracking-tight text-slate-900 dark:text-white
-                  transition-all group-hover:text-blue-700 dark:group-hover:text-blue-300
-                  ${scrolled ? 'text-base' : 'text-xl'}`}>
-                  Avere
-                </div>
-                <div className={`font-medium text-slate-500 dark:text-slate-400
-                  ${scrolled ? 'mt-1 text-[11px]' : 'mt-1.5 text-sm'}`}>
-                  IT Solutions
-                </div>
-              </motion.div>
             </Link>
 
             {/* Nav + sliding glass pill */}
@@ -287,7 +321,7 @@ function Navbar() {
 
               {menu.map((item) => {
                 let active = isItemActive(item)
-                let openDrop = hoveredId === item.id && item.dropdown
+                let openDrop = hoveredId === item.id && (item.dropdown || item.mega)
                 let lit = active || hoveredId === item.id
 
                 return (
@@ -347,7 +381,20 @@ function Navbar() {
                     )}
 
                     <AnimatePresence>
-                      {openDrop && (
+                      {openDrop && item.mega ? (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                          transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                        >
+                          <ProductMegaMenu
+                            groups={productGroups}
+                            onNavigate={() => setHoveredId(null)}
+                          />
+                        </motion.div>
+                      ) : null}
+                      {openDrop && item.dropdown && !item.mega && (
                         <motion.ul
                           initial={{ opacity: 0, y: 10, scale: 0.96 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -357,9 +404,9 @@ function Navbar() {
                             absolute left-1/2 -translate-x-1/2 top-full mt-3 z-50
                             ${
                               item.wide && item.dropdown.length >= 6
-                                ? 'w-[min(640px,70vw)] grid grid-cols-3 gap-1 p-2'
+                                ? 'w-[min(640px,70vw)] grid grid-cols-3 gap-y-1 gap-x-0 p-2'
                                 : item.wide && item.dropdown.length >= 3
-                                  ? 'w-[min(420px,70vw)] grid grid-cols-2 gap-1 p-2'
+                                  ? 'w-[min(420px,70vw)] grid grid-cols-2 gap-y-1 gap-x-0 p-2'
                                   : 'w-56 flex flex-col gap-0.5 p-1.5'
                             }
                             rounded-2xl
@@ -368,26 +415,49 @@ function Navbar() {
                             shadow-[0_28px_60px_-22px_rgba(15,23,42,0.5)]
                           `}
                         >
-                          {item.dropdown.map((sub, i) => (
-                            <motion.li
-                              key={sub.path + sub.name}
-                              initial={{ opacity: 0, x: -8 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0.025 * i, duration: 0.22 }}
-                            >
-                              <Link
-                                to={sub.path}
-                                className="block px-3 py-2.5 rounded-xl text-sm
-                                  text-slate-600 dark:text-slate-300
-                                  hover:bg-blue-50 dark:hover:bg-blue-500/15
-                                  hover:text-blue-700 dark:hover:text-blue-300
-                                  hover:translate-x-0.5
-                                  transition-all duration-200"
-                              >
-                                {sub.name}
-                              </Link>
-                            </motion.li>
-                          ))}
+                          {(() => {
+                            let cols =
+                              item.wide && item.dropdown.length >= 6
+                                ? 3
+                                : item.wide && item.dropdown.length >= 3
+                                  ? 2
+                                  : 1
+                            return (
+                              <>
+                                {cols > 1 &&
+                                  Array.from({ length: cols - 1 }, (_, d) => (
+                                    <span
+                                      key={`div-${d}`}
+                                      aria-hidden
+                                      className="pointer-events-none absolute top-2 bottom-2 z-10 w-px
+                                        bg-slate-200/90 dark:bg-white/20"
+                                      style={{ left: `${((d + 1) / cols) * 100}%` }}
+                                    />
+                                  ))}
+                                {item.dropdown.map((sub, i) => (
+                                  <motion.li
+                                    key={sub.path + sub.name}
+                                    initial={{ opacity: 0, x: -8 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.025 * i, duration: 0.22 }}
+                                    className="relative z-0"
+                                  >
+                                    <Link
+                                      to={sub.path}
+                                      className="block px-3 py-2.5 rounded-xl text-sm
+                                        text-slate-600 dark:text-slate-300
+                                        hover:bg-blue-50 dark:hover:bg-blue-500/15
+                                        hover:text-blue-700 dark:hover:text-blue-300
+                                        hover:translate-x-0.5
+                                        transition-all duration-200"
+                                    >
+                                      {sub.name}
+                                    </Link>
+                                  </motion.li>
+                                ))}
+                              </>
+                            )
+                          })()}
                         </motion.ul>
                       )}
                     </AnimatePresence>
@@ -636,19 +706,48 @@ function Navbar() {
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
-                          <div className="pb-3 pl-3 space-y-1">
-                            {item.dropdown.map((sub) => (
-                              <Link
-                                key={sub.path + sub.name}
-                                to={sub.path}
-                                onClick={() => setOpen(false)}
-                                className="block py-2 text-sm text-slate-500 dark:text-slate-400
-                                  hover:text-blue-600 dark:hover:text-blue-400"
-                              >
-                                {sub.name}
-                              </Link>
-                            ))}
-                          </div>
+                          {item.mega ? (
+                            <div className="pb-3 pl-2 space-y-3">
+                              {productGroups.map((group) => (
+                                <div key={group.category}>
+                                  <p className="block py-1.5 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                                    {group.category}
+                                  </p>
+                                  <div className="pl-3 space-y-0.5">
+                                    {group.items?.length ? (
+                                      group.items.map((p) => (
+                                        <Link
+                                          key={p._id}
+                                          to={`/product?category=${p._id}`}
+                                          onClick={() => setOpen(false)}
+                                          className="block py-1.5 text-sm text-slate-500 dark:text-slate-400
+                                            hover:text-blue-600 dark:hover:text-blue-400"
+                                        >
+                                          {p.title}
+                                        </Link>
+                                      ))
+                                    ) : (
+                                      <p className="py-1 text-xs text-slate-400">No products yet</p>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="pb-3 pl-3 space-y-1">
+                              {item.dropdown.map((sub) => (
+                                <Link
+                                  key={sub.path + sub.name}
+                                  to={sub.path}
+                                  onClick={() => setOpen(false)}
+                                  className="block py-2 text-sm text-slate-500 dark:text-slate-400
+                                    hover:text-blue-600 dark:hover:text-blue-400"
+                                >
+                                  {sub.name}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
                         </motion.div>
                       )}
                     </AnimatePresence>

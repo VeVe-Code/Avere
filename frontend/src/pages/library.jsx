@@ -45,7 +45,8 @@ function Library() {
 
   let filters = [
     { key: 'all', label: 'All' },
-    { key: 'knowledge', label: 'News' },
+    { key: 'knowledge', label: 'Knowledge' },
+    { key: 'news', label: 'News' },
     { key: 'service', label: 'Service' },
     { key: 'system', label: 'System' },
     { key: 'network', label: 'Network' },

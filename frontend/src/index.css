@@ -179,30 +179,37 @@ html.dark .rich-content code {
   color: #e2e8f0;
 }
 
-/* Shooting star: small tip in front + long one-way tail (aligned tips, no fat middle) */
+/* Shooting star: one 2.8s lap, then 30s pause (total cycle 32.8s) */
+/* Active window = 2.8/32.8 ≈ 8.5366% of the cycle */
 @keyframes avere-star-0 {
-  from { stroke-dashoffset: 0; }
-  to { stroke-dashoffset: -1000; }
+  0% { stroke-dashoffset: 0; }
+  8.5366% { stroke-dashoffset: -1000; }
+  100% { stroke-dashoffset: -1000; }
 }
 @keyframes avere-star-14 {
-  from { stroke-dashoffset: 14; }
-  to { stroke-dashoffset: -986; }
+  0% { stroke-dashoffset: 14; }
+  8.5366% { stroke-dashoffset: -986; }
+  100% { stroke-dashoffset: -986; }
 }
 @keyframes avere-star-51 {
-  from { stroke-dashoffset: 51; }
-  to { stroke-dashoffset: -949; }
+  0% { stroke-dashoffset: 51; }
+  8.5366% { stroke-dashoffset: -949; }
+  100% { stroke-dashoffset: -949; }
 }
 @keyframes avere-star-116 {
-  from { stroke-dashoffset: 116; }
-  to { stroke-dashoffset: -884; }
+  0% { stroke-dashoffset: 116; }
+  8.5366% { stroke-dashoffset: -884; }
+  100% { stroke-dashoffset: -884; }
 }
 @keyframes avere-star-196 {
-  from { stroke-dashoffset: 196; }
-  to { stroke-dashoffset: -804; }
+  0% { stroke-dashoffset: 196; }
+  8.5366% { stroke-dashoffset: -804; }
+  100% { stroke-dashoffset: -804; }
 }
 @keyframes avere-star-286 {
-  from { stroke-dashoffset: 286; }
-  to { stroke-dashoffset: -714; }
+  0% { stroke-dashoffset: 286; }
+  8.5366% { stroke-dashoffset: -714; }
+  100% { stroke-dashoffset: -714; }
 }
 
 @keyframes avere-star-pulse {
@@ -213,6 +220,35 @@ html.dark .rich-content code {
 @keyframes avere-star-twinkle {
   0%, 100% { opacity: 1; filter: drop-shadow(0 0 2px rgba(147, 197, 253, 0.5)); }
   50% { opacity: 0.85; filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.85)); }
+}
+
+/* Hide star trail during the 30s pause (after the 2.8s lap) */
+@keyframes avere-star-visible {
+  0%, 8.5366% { visibility: visible; }
+  8.54%, 100% { visibility: hidden; }
+}
+
+@keyframes avere-partners-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.avere-partners-marquee {
+  animation: avere-partners-marquee 32s linear infinite;
+}
+
+.avere-partners-marquee:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avere-partners-marquee {
+    animation: none;
+  }
 }
 
 .avere-nav-border-svg {
@@ -228,6 +264,9 @@ html.dark .rich-content code {
   width: calc(100% - 3px);
   height: calc(100% - 3px);
   fill: none;
+  animation-duration: 32.8s, 32.8s;
+  animation-timing-function: linear, step-end;
+  animation-iteration-count: infinite, infinite;
 }
 
 /* Small bright tip only */
@@ -236,9 +275,7 @@ html.dark .rich-content code {
   stroke-width: 2.8;
   stroke-linecap: round;
   stroke-dasharray: 4.5 995.5;
-  animation:
-    avere-star-0 2.8s linear infinite,
-    avere-star-pulse 1.4s ease-in-out infinite;
+  animation-name: avere-star-0, avere-star-visible;
   filter: blur(3.5px);
 }
 
@@ -247,9 +284,7 @@ html.dark .rich-content code {
   stroke-width: 1.75;
   stroke-linecap: round;
   stroke-dasharray: 3.5 996.5;
-  animation:
-    avere-star-0 2.8s linear infinite,
-    avere-star-twinkle 1.4s ease-in-out infinite;
+  animation-name: avere-star-0, avere-star-visible;
 }
 
 .avere-star-head-core {
@@ -257,7 +292,7 @@ html.dark .rich-content code {
   stroke-width: 1;
   stroke-linecap: round;
   stroke-dasharray: 2 998;
-  animation: avere-star-0 2.8s linear infinite;
+  animation-name: avere-star-0, avere-star-visible;
 }
 
 /* Tail behind tip — butt caps, longer = more offset so tips stay aligned */
@@ -266,7 +301,7 @@ html.dark .rich-content code {
   stroke-width: 1.05;
   stroke-linecap: butt;
   stroke-dasharray: 18 982;
-  animation: avere-star-14 2.8s linear infinite;
+  animation-name: avere-star-14, avere-star-visible;
   opacity: 0.85;
 }
 
@@ -275,7 +310,7 @@ html.dark .rich-content code {
   stroke-width: 0.8;
   stroke-linecap: butt;
   stroke-dasharray: 55 945;
-  animation: avere-star-51 2.8s linear infinite;
+  animation-name: avere-star-51, avere-star-visible;
   opacity: 0.5;
 }
 
@@ -284,7 +319,7 @@ html.dark .rich-content code {
   stroke-width: 0.55;
   stroke-linecap: butt;
   stroke-dasharray: 120 880;
-  animation: avere-star-116 2.8s linear infinite;
+  animation-name: avere-star-116, avere-star-visible;
   opacity: 0.26;
 }
 
@@ -293,7 +328,7 @@ html.dark .rich-content code {
   stroke-width: 0.4;
   stroke-linecap: butt;
   stroke-dasharray: 200 800;
-  animation: avere-star-196 2.8s linear infinite;
+  animation-name: avere-star-196, avere-star-visible;
   opacity: 0.13;
 }
 
@@ -302,7 +337,7 @@ html.dark .rich-content code {
   stroke-width: 0.3;
   stroke-linecap: butt;
   stroke-dasharray: 290 710;
-  animation: avere-star-286 2.8s linear infinite;
+  animation-name: avere-star-286, avere-star-visible;
   filter: blur(0.4px);
   opacity: 0.07;
 }

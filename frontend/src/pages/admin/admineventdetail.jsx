@@ -46,7 +46,7 @@ function EventDetail() {
         className="max-w-6xl w-full mx-auto bg-white dark:bg-slate-900 rounded-3xl shadow-xl overflow-hidden"
       >
         {/* Image */}
-        <div className="h-[320px] md:h-[420px] overflow-hidden">
+        <div className="pt-[2cm] px-[2cm] h-[calc(320px+2cm)] md:h-[calc(420px+2cm)] overflow-hidden">
           <img
             src={assetUrl(data.photo)}
             alt={data.title}
@@ -60,7 +60,7 @@ function EventDetail() {
             {data.title}
           </h1>
 
-          <p className="text-lg text-gray-600 dark:text-slate-400 leading-relaxed break-all">
+          <p className="text-lg text-gray-600 dark:text-slate-400 leading-relaxed break-words">
             {data.description}
           </p>
 

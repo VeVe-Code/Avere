@@ -4,10 +4,12 @@ let app = express()
 let PositionRoute = require('./routes/position.js')
 let serviceRoute = require('./routes/service');
 let knowLedgeRoute = require('./routes/knowledge')
+let newsRoute = require('./routes/news')
 let SecurityRoute = require('./routes/security')
 let SystemsRoute =require('./routes/systems')
 let UserRoute =require('./routes/user.js')
 let PublicknowLedgeRoute =require('./routes/publicknowledge.js')
+let PublicNewsRoute = require('./routes/publicnews.js')
 let PublicNetworkRoute = require('./routes/publicnetwork.js')
 let PublicSecurityRoute = require('./routes/publicsecurity.js')
 let PublicSystemsRoute = require('./routes/publicsystems.js')
@@ -20,6 +22,13 @@ let PublicSearchRoute = require('./routes/publicsearch.js')
 const EventsRoute = require("./routes/events");
 let PublicPositionRoute = require('./routes/publicposition.js')
 let PubliceventsRoute = require('./routes/publicevents.js')
+const HeroSlideRoute = require('./routes/heroslide.js')
+let PublicHeroSlideRoute = require('./routes/publicheroslide.js')
+const PartnerRoute = require('./routes/partner.js')
+let PublicPartnerRoute = require('./routes/publicpartner.js')
+const CatalogSettingsRoute = require('./routes/catalogsettings.js')
+let ContactInfoRoute = require('./routes/contactinfo.js')
+let PublicContactInfoRoute = require('./routes/publiccontactinfo.js')
 let cookieParser = require('cookie-parser')
 let morgan = require('morgan')
 let cors = require('cors')
@@ -97,6 +106,26 @@ app.listen(process.env.PORT, () => {
         if (moved) {
             console.log("Moved " + moved + " image(s) to public/images")
         }
+
+        // Backfill displayDate from createdAt for catalog items (one-time safe migrate).
+        const catalogModels = [
+            require('./model/Services'),
+            require('./model/Network'),
+            require('./model/Systems'),
+            require('./model/Security'),
+            require('./model/Events'),
+            require('./model/Knowledge'),
+            require('./model/News'),
+        ]
+        for (const Model of catalogModels) {
+            const migrated = await Model.updateMany(
+                { $or: [{ displayDate: { $exists: false } }, { displayDate: null }] },
+                [{ $set: { displayDate: { $ifNull: ['$createdAt', new Date()] } } }]
+            )
+            if (migrated.modifiedCount) {
+                console.log(`Backfilled displayDate on ${migrated.modifiedCount} ${Model.modelName} doc(s)`)
+            }
+        }
     })
     .catch((err) => {
         console.log("MongoDB Connection Failed: ", err)
@@ -119,7 +148,9 @@ app.get("/",(req,res)=>{
 })
 app.use("/api/service",serviceRoute)
 app.use(knowLedgeRoute)
+app.use(newsRoute)
 app.use(PublicknowLedgeRoute)
+app.use(PublicNewsRoute)
 app.use(SecurityRoute)
 app.use(PublicSecurityRoute)
 app.use(NetworkRoute)
@@ -134,6 +165,13 @@ app.use(PublicCategoryRoute)
 app.use(ContactusRoute)
 app.use("/api/events", EventsRoute);
 app.use("/api/publicevents", PubliceventsRoute)
+app.use("/api/heroslides", HeroSlideRoute)
+app.use("/api/publicheroslides", PublicHeroSlideRoute)
+app.use("/api/partners", PartnerRoute)
+app.use("/api/publicpartners", PublicPartnerRoute)
+app.use("/api/catalog-settings", CatalogSettingsRoute)
+app.use("/api/contactinfo", ContactInfoRoute)
+app.use("/api/publiccontactinfo", PublicContactInfoRoute)
 app.use(PositionRoute)
 app.use('/api/users', UserRoute)
 app.use('/api/publicposition', PublicPositionRoute)

@@ -2,6 +2,20 @@ const Services = require("../model/Services");
 const mongoose = require("mongoose");
 let removeFile = require('../helpers/removeFile')
 const { parseBool, excludeHidden } = require('../helpers/visibility')
+const {
+  CATALOG_SORT,
+  ORDER_SORT,
+  makeMoveHandler,
+  makeSwitchHandler,
+  makeNormalizeHandler,
+  makeReorderHandler,
+} = require('../helpers/catalogOrder')
+const {
+  resolveListSort,
+  getSortMode,
+  displayDateForCreate,
+  applyDisplayDateUpdate,
+} = require('../helpers/catalogSort')
 
 async function listServices(req, res, { publicOnly = false } = {}) {
   try {
@@ -22,12 +36,13 @@ async function listServices(req, res, { publicOnly = false } = {}) {
 
     const limit = 6;
     const page = Number(req.query.page) || 1;
+    const sort = await resolveListSort('services', { publicOnly })
 
     const services = await Services.find(query)
       .populate('category', 'title')
       .skip((page - 1) * limit)
       .limit(limit)
-      .sort({ createdAt: -1 });
+      .sort(sort);
 
     const totalServices = await Services.countDocuments(query);
     const totalPages = Math.max(1, Math.ceil(totalServices / limit));
@@ -43,10 +58,10 @@ async function listServices(req, res, { publicOnly = false } = {}) {
       links.loopablelinks.push({ number: i });
     }
 
-    return res.json({
-      links,
-      data: services
-    });
+    res.set('Cache-Control', 'no-store')
+    const payload = { links, data: services }
+    if (!publicOnly) payload.sortMode = await getSortMode('services')
+    return res.json(payload);
   } catch (e) {
     return res.status(500).json({ msg: "server error" });
   }
@@ -98,13 +113,16 @@ let serviceController = {
 
   create: async (req, res) => {
     try {
-      let { name, description, about, category, hidden } = req.body;
+      let { name, description, about, category, hidden, pinned, order } = req.body;
       let service = await Services.create({
         name,
         description,
         about,
         category,
-        hidden: parseBool(hidden, false)
+        hidden: parseBool(hidden, false),
+        pinned: parseBool(pinned, false),
+        order: Number.isFinite(Number(order)) ? Number(order) : 0,
+        displayDate: displayDateForCreate(req.body),
       })
       return res.json(service)
     } catch (e) {
@@ -123,6 +141,15 @@ let serviceController = {
       if (updateData.hidden !== undefined) {
         updateData.hidden = parseBool(updateData.hidden, false);
       }
+      if (updateData.pinned !== undefined) {
+        updateData.pinned = parseBool(updateData.pinned, false);
+      }
+      if (updateData.order !== undefined) {
+        updateData.order = Number.isFinite(Number(updateData.order))
+          ? Number(updateData.order)
+          : 0;
+      }
+      applyDisplayDateUpdate(updateData, req.body)
       delete updateData.photo;
 
       let service = await Services.findByIdAndUpdate(id, updateData, { new: true });
@@ -154,6 +181,31 @@ let serviceController = {
       return res.status(500).json({ msg: "server error" });
     }
   },
+
+  togglePinned: async (req, res) => {
+    try {
+      let id = req.params.id;
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ msg: "Invalid service ID" });
+      }
+      let service = await Services.findById(id);
+      if (!service) {
+        return res.status(404).json({ msg: "Service not found" });
+      }
+      service.pinned = !service.pinned;
+      await service.save();
+      return res.json(service);
+    } catch (e) {
+      return res.status(500).json({ msg: "server error" });
+    }
+  },
+
+  reorder: makeReorderHandler(Services, ORDER_SORT, 'services'),
+
+  normalizeOrders: makeNormalizeHandler(Services, ORDER_SORT, 'services'),
+
+  move: makeMoveHandler(Services, ORDER_SORT, 'services'),
+  switch: makeSwitchHandler(Services, ORDER_SORT, 'services'),
 
   destory: async (req, res) => {
     try {

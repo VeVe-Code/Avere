@@ -68,9 +68,9 @@ export const FAQ_ITEMS = [
     id: 'clients',
     keywords: ['client', 'clients', 'customer', 'customers', 'partner', 'who do you work', 'references'],
     weakKeywords: [],
-    question: 'Selected clients',
+    question: 'Who we work with',
     answer:
-      'We’ve been trusted by organizations such as hospitals, financial teams, and tech partners — for example Krungthai Computer Services, Siriraj Hospital, Srisawad, and others. Every project is different; we’re happy to discuss what fits your situation.',
+      'We work with organizations across healthcare, finance, and technology. Client details stay private — if you’d like to talk about whether we’re a fit, we’re happy to discuss that directly.',
   },
   {
     id: 'contact',
@@ -93,11 +93,19 @@ export const FAQ_ITEMS = [
   },
   {
     id: 'events',
-    keywords: ['event', 'events', 'news', 'upcoming event'],
+    keywords: ['event', 'events', 'upcoming event'],
     weakKeywords: [],
     question: 'Events',
     answer:
       'You can find our events on the Events page in the menu. That’s the best place for dates and details.',
+  },
+  {
+    id: 'news',
+    keywords: ['news', 'headline', 'press', 'announcement'],
+    weakKeywords: [],
+    question: 'News',
+    answer:
+      'Latest company news is on the News page in the menu. You’re welcome to browse there anytime.',
   },
   {
     id: 'knowledge',
@@ -125,8 +133,8 @@ const TOPIC_PRIORITY = [
   'contact',
   'jobs',
   'events',
+  'news',
   'knowledge',
-  'clients',
   'about',
 ]
 
@@ -206,6 +214,7 @@ export function relatedPath(id) {
   if (id === 'contact') return '/contactus'
   if (id === 'jobs') return '/position'
   if (id === 'events') return '/events'
+  if (id === 'news') return '/news'
   if (id === 'knowledge') return '/knowledge'
   return null
 }

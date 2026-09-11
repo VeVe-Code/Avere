@@ -9,6 +9,10 @@ const adminOnly = [AuthMiddleware, requireAdmin];
 let router = express.Router()
 
 router.get('/api/systems', ...adminOnly, systemscontroller.index)
+router.post('/api/systems/reorder', ...adminOnly, systemscontroller.reorder)
+router.post('/api/systems/normalize-orders', ...adminOnly, systemscontroller.normalizeOrders)
+router.post('/api/systems/move', ...adminOnly, systemscontroller.move)
+router.post('/api/systems/switch', ...adminOnly, systemscontroller.switch)
 router.post('/api/systems', ...adminOnly, [
     body('title').notEmpty(),
     body('description').notEmpty(),
@@ -34,6 +38,7 @@ router.post('/api/systems/:id/upload', ...adminOnly, [
 router.delete('/api/systems/:id', ...adminOnly, systemscontroller.destroy)
 router.patch('/api/systems/:id', ...adminOnly, systemscontroller.update)
 router.patch('/api/systems/:id/hidden', ...adminOnly, systemscontroller.toggleHidden)
+router.patch('/api/systems/:id/pinned', ...adminOnly, systemscontroller.togglePinned)
 
 
 

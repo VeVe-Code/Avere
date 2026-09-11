@@ -7,12 +7,7 @@ import SEO from '../components/SEO'
 import ListPagination from '../components/ListPagination'
 import assetUrl from '../helper/assetUrl'
 import { normalizeLinks } from '../helper/paginationLinks'
-
-function previewText(text, max = 20) {
-  let t = (text || '').trim()
-  if (t.length <= max) return t
-  return t.slice(0, max) + '...'
-}
+import { catalogDateValue, formatCatalogDate } from '../helper/displayDate.js'
 
 function Knowledge() {
   let [data, setData] = useState([])
@@ -49,8 +44,8 @@ function Knowledge() {
 
       <div className="relative z-10 py-14 sm:py-16 px-4 sm:px-6 md:px-10 lg:px-24">
         <SEO
-          title="News - Avere"
-          description="Latest news and articles from Avere"
+          title="Knowledge - Avere"
+          description="Latest knowledge articles from Avere"
         />
 
         <div className="max-w-5xl mx-auto">
@@ -64,7 +59,7 @@ function Knowledge() {
                 Updates
               </p>
               <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-                News
+                Knowledge
               </h1>
               <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-md">
                 Stories, product notes, and company updates.
@@ -82,7 +77,7 @@ function Knowledge() {
                 <input
                   type="text"
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search news..."
+                  placeholder="Search knowledge..."
                   className="w-full outline-none bg-transparent text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
                 />
               </label>
@@ -114,10 +109,10 @@ function Knowledge() {
                     to={`/knowledge/${d._id}`}
                     className="group flex gap-3.5 sm:gap-5 md:gap-7 rounded-2xl border border-slate-200/90 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-3 sm:p-4 md:p-6 transition duration-300 hover:border-blue-200 dark:hover:border-blue-500/40 hover:bg-white dark:hover:bg-slate-900 hover:shadow-[0_12px_40px_-20px_rgba(37,99,235,0.35)]"
                   >
-                    <div className="shrink-0 w-24 h-24 sm:w-32 sm:h-32 md:w-44 md:h-40 overflow-hidden rounded-xl md:rounded-2xl bg-slate-100 dark:bg-slate-800 ring-1 ring-slate-200/80 dark:ring-slate-700">
+                    <div className="shrink-0 w-40 h-40 sm:w-56 sm:h-52 md:w-72 md:h-60 overflow-hidden rounded-xl md:rounded-2xl bg-slate-100 dark:bg-slate-800 ring-1 ring-slate-200/80 dark:ring-slate-700">
                       <img
                         src={assetUrl(d.photo)}
-                        alt={d.title || 'news'}
+                        alt={d.title || 'knowledge'}
                         className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
                       />
                     </div>
@@ -127,16 +122,16 @@ function Knowledge() {
                         <h2 className="text-[15px] sm:text-lg md:text-2xl font-semibold text-slate-900 dark:text-slate-100 leading-snug line-clamp-2 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
                           {d.title}
                         </h2>
-                        {d.createdAt && (
+                        {catalogDateValue(d) && (
                           <time className="shrink-0 text-[11px] sm:text-xs md:text-sm text-slate-400 dark:text-slate-500 tabular-nums pt-1">
-                            {new Date(d.createdAt).toLocaleDateString()}
+                            {formatCatalogDate(d)}
                           </time>
                         )}
                       </div>
 
-                      <div className="mt-2 md:mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
-                        <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 break-all">
-                          {previewText(d.description, 20)}
+                      <div className="mt-2 md:mt-3 space-y-1.5">
+                        <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-3">
+                          {d.description}
                         </p>
                         <span className="inline-flex items-center gap-1 text-sm md:text-base font-medium text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300">
                           Detail

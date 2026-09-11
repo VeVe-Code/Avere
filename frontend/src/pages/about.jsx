@@ -54,18 +54,6 @@ const strengths = [
 
 const clouds = ['AWS', 'Azure', 'GCP', 'Huawei Cloud']
 
-const clients = [
-  'Krungthai Computer Services',
-  'Kluaynamthai Hospital',
-  'Srisawad Corporation',
-  'Siriraj Hospital',
-  'Kasikorn Carabao',
-  'Zenith Comp',
-  'Premium Gold Yaowarat',
-  'Mercifully',
-  'Tungthanasin (Easy Money)',
-]
-
 const facts = [
   { label: 'Founded', value: '2016' },
   { label: 'Based in', value: 'Bangkok' },
@@ -353,39 +341,6 @@ export default function About() {
               </motion.div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Clients */}
-      <section className="px-5 sm:px-8 lg:px-12 py-16 sm:py-20 bg-[#0a101c] border-y border-white/10">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            className="mb-10"
-            variants={reveal}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true }}
-          >
-            <p className="text-[11px] font-semibold tracking-[0.22em] uppercase text-blue-400 mb-3">
-              Partnerships
-            </p>
-            <h2 className="text-3xl font-semibold tracking-tight">Selected clients</h2>
-          </motion.div>
-
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-0">
-            {clients.map((name, i) => (
-              <motion.li
-                key={name}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.03, duration: 0.35 }}
-                className="border-t border-white/10 py-4 text-sm sm:text-[15px] text-slate-300"
-              >
-                {name}
-              </motion.li>
-            ))}
-          </ul>
         </div>
       </section>
 

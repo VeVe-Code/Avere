@@ -32,13 +32,11 @@ let UserSchema = new Schema({
         },
         lineId: {
             type: String,
-            default: null,
             sparse: true,
             unique: true,
         },
         googleId: {
             type: String,
-            default: null,
             sparse: true,
             unique: true,
         },
@@ -58,7 +56,7 @@ let UserSchema = new Schema({
         savedItems: [{
             type: {
                 type: String,
-                enum: ['knowledge', 'service', 'system', 'network', 'security', 'events'],
+                enum: ['knowledge', 'news', 'service', 'system', 'network', 'security', 'events'],
                 required: true
             },
             itemId: {

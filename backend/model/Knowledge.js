@@ -26,6 +26,18 @@ let KnowledgeScgema = new Schema({
     type: Boolean,
     default: false
   },
+  pinned: {
+    type: Boolean,
+    default: false
+  },
+  order: {
+    type: Number,
+    default: 0
+  },
+  displayDate: {
+    type: Date,
+    default: Date.now
+  },
 
   // optional content blocks (image + text), same layout as main on detail page
   sections: [

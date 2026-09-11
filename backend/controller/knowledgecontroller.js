@@ -1,6 +1,23 @@
 const mongoose = require("mongoose");
 const Knowledge = require("../model/Knowledge");
 let removeFile = require('../helpers/removeFile');
+const {
+  CATALOG_SORT,
+  ORDER_SORT,
+  makeReorderHandler,
+  makeTogglePinnedHandler,
+  makeMoveHandler,
+  makeSwitchHandler,
+  makeNormalizeHandler,
+  parseOrderField,
+} = require('../helpers/catalogOrder');
+const {
+  resolveListSort,
+  getSortMode,
+  displayDateForCreate,
+  applyDisplayDateUpdate,
+  parseDisplayDate,
+} = require('../helpers/catalogSort');
 
 function parseBool(value, fallback = false) {
   if (value === undefined || value === null || value === "") return fallback;
@@ -32,11 +49,12 @@ async function listKnowledge(req, res, { publicOnly = false } = {}) {
 
     let limit = 6;
     let page = parseInt(req.query.page, 10) || 1;
+    const sort = await resolveListSort('knowledge', { publicOnly });
 
     let knowledge = await Knowledge.find(query)
       .skip((page - 1) * limit)
       .limit(limit)
-      .sort({ createdAt: -1 });
+      .sort(sort);
 
     let totalKnowledge = await Knowledge.countDocuments(query);
     let totalPages = Math.max(1, Math.ceil(totalKnowledge / limit));
@@ -52,7 +70,10 @@ async function listKnowledge(req, res, { publicOnly = false } = {}) {
       Links.LoopableLinks.push({ number: i + 1 });
     }
 
-    return res.json({ data: knowledge, Links });
+    res.set('Cache-Control', 'no-store')
+    const payload = { data: knowledge, Links }
+    if (!publicOnly) payload.sortMode = await getSortMode('knowledge')
+    return res.json(payload);
   } catch (e) {
     console.log(e);
     return res.status(500).json({ msg: "server error" });
@@ -74,13 +95,16 @@ let knowledgecontroller = {
   /* ================= STORE ================= */
   store: async (req, res) => {
     try {
-      let { title, description, about, sections, hidden } = req.body;
+      let { title, description, about, sections, hidden, pinned, order } = req.body;
 
       let knowledge = await Knowledge.create({
         title,
         description,
         about,
         hidden: parseBool(hidden, false),
+        pinned: parseBool(pinned, false),
+        order: parseOrderField(order, 0),
+        displayDate: displayDateForCreate(req.body),
         sections: sections ? JSON.parse(sections) : []
       });
 
@@ -141,7 +165,7 @@ let knowledgecontroller = {
     try {
       let id = req.params.id;
 
-      let { title, description, about, sections, hidden } = req.body;
+      let { title, description, about, sections, hidden, pinned, order } = req.body;
 
       let knowledge = await Knowledge.findById(id);
 
@@ -155,6 +179,16 @@ let knowledgecontroller = {
 
       if (hidden !== undefined) {
         knowledge.hidden = parseBool(hidden, knowledge.hidden);
+      }
+      if (pinned !== undefined) {
+        knowledge.pinned = parseBool(pinned, knowledge.pinned);
+      }
+      if (order !== undefined) {
+        knowledge.order = parseOrderField(order, knowledge.order ?? 0);
+      }
+      if (req.body.displayDate !== undefined) {
+        const parsed = parseDisplayDate(req.body.displayDate)
+        if (parsed) knowledge.displayDate = parsed
       }
 
       if (sections) {
@@ -202,6 +236,12 @@ let knowledgecontroller = {
       return res.status(500).json({ msg: "server error" });
     }
   },
+
+  togglePinned: makeTogglePinnedHandler(Knowledge, 'Not found'),
+  reorder: makeReorderHandler(Knowledge, ORDER_SORT, 'knowledge posts'),
+  normalizeOrders: makeNormalizeHandler(Knowledge, ORDER_SORT, 'knowledge posts'),
+  move: makeMoveHandler(Knowledge, ORDER_SORT, 'knowledge posts'),
+  switch: makeSwitchHandler(Knowledge, ORDER_SORT, 'knowledge posts'),
 
   /* ================= DELETE ================= */
   destroy: async (req, res) => {

@@ -1,6 +1,7 @@
 import axios from "../../helper/axios";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import assetUrl from "../../helper/assetUrl";
 import { validateImageFile } from "../../helper/validateImage";
 import {
@@ -18,6 +19,8 @@ import {
   FormActions,
   fieldClass,
 } from "../../components/admin/AdminFormUI";
+import DisplayDateField from "../../components/admin/DisplayDateField.jsx";
+import { displayDateToApi, formatDateForInput, todayDateInput } from "../../helper/displayDate.js";
 
 function emptyBlock() {
   return { title: "", content: "", file: null, preview: null, photo: null };
@@ -31,6 +34,7 @@ function KnowledgeForm() {
   let [description, setDescription] = useState("");
   let [about, setAbout] = useState("");
   let [hidden, setHidden] = useState(false);
+  let [displayDate, setDisplayDate] = useState(todayDateInput());
   let [file, setFile] = useState(null);
   let [preview, setPreview] = useState(null);
   let [blocks, setBlocks] = useState([]);
@@ -88,6 +92,7 @@ function KnowledgeForm() {
         description,
         about,
         hidden,
+        displayDate: displayDateToApi(displayDate),
         sections: JSON.stringify(filteredSections),
       };
 
@@ -140,6 +145,7 @@ function KnowledgeForm() {
         setDescription(res.data.description || "");
         setAbout(res.data.about || "");
         setHidden(Boolean(res.data.hidden));
+        setDisplayDate(formatDateForInput(res.data.displayDate || res.data.createdAt));
         if (res.data.photo) setPreview(assetUrl(res.data.photo));
         if (res.data.sections?.length) {
           setBlocks(
@@ -178,6 +184,16 @@ function KnowledgeForm() {
   let removeBlock = (index) =>
     setBlocks((prev) => prev.filter((_, i) => i !== index));
 
+  let moveBlock = (index, dir) => {
+    setBlocks((prev) => {
+      let next = [...prev];
+      let target = index + dir;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
   let updateBlock = (index, field, value) => {
     setBlocks((prev) => {
       let next = [...prev];
@@ -209,8 +225,8 @@ function KnowledgeForm() {
 
   return (
     <AdminFormCard
-      title={id ? "Edit news article" : "Create news article"}
-      subtitle="Step through cover, basics, full article, then optional extra blocks."
+      title={id ? "Edit knowledge article" : "Create knowledge article"}
+      subtitle="Cover, basics, full article, then extra image + text blocks in order."
       onSubmit={createKnowledge}
       footer={
         <FormActions
@@ -256,7 +272,7 @@ function KnowledgeForm() {
         <FormField
           label="List preview"
           required
-          hint="About 20 characters shown on the news list"
+          hint="About 20 characters shown on the knowledge list"
           error={error.description?.msg}
         >
           <textarea
@@ -270,6 +286,10 @@ function KnowledgeForm() {
             className={fieldClass}
             aria-invalid={Boolean(error.description)}
           />
+        </FormField>
+
+        <FormField label="Display date" hint="Used when list sorting is set to Display date.">
+          <DisplayDateField value={displayDate} onChange={setDisplayDate} />
         </FormField>
 
         <FormField
@@ -311,8 +331,9 @@ function KnowledgeForm() {
 
       <FormSection step="4" title="Extra content blocks">
         <div className="flex flex-wrap items-center justify-between gap-3 -mt-1 mb-1">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Optional. Same image + text layout as the main article.
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md">
+            Optional. Stack more images and text in order: Image → Text → Image → Text.
+            Use arrows to reorder.
           </p>
           <button
             type="button"
@@ -338,13 +359,33 @@ function KnowledgeForm() {
               <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                 Block {index + 1}
               </span>
-              <button
-                type="button"
-                onClick={() => removeBlock(index)}
-                className="text-sm text-red-600 hover:text-red-700"
-              >
-                Remove
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => moveBlock(index, -1)}
+                  disabled={index === 0}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none"
+                  aria-label="Move block up"
+                >
+                  <ChevronUp className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveBlock(index, 1)}
+                  disabled={index === blocks.length - 1}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none"
+                  aria-label="Move block down"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeBlock(index)}
+                  className="text-sm text-red-600 hover:text-red-700 ml-1"
+                >
+                  Remove
+                </button>
+              </div>
             </div>
 
             <ImageDropzone

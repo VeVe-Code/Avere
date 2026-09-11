@@ -1,6 +1,6 @@
 import axios from '../../helper/axios'
 import React, { useState } from 'react'
-import { Pencil, Tags, Trash2 } from 'lucide-react'
+import { Package, Pencil, Trash2 } from 'lucide-react'
 import ConfirmDialog from './ConfirmDialog'
 
 function AdminCategorycard({ d, onDelete, onEdit, active }) {
@@ -21,7 +21,7 @@ function AdminCategorycard({ d, onDelete, onEdit, active }) {
       window.alert(
         err.response?.data?.msg ||
           err.response?.data?.error ||
-          'Failed to delete category'
+          'Failed to delete product'
       )
     } finally {
       setBusy(false)
@@ -37,15 +37,15 @@ function AdminCategorycard({ d, onDelete, onEdit, active }) {
       }`}
     >
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-        <Tags size={18} />
+        <Package size={18} />
       </div>
 
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
           {d.title}
         </p>
-        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-          Used for filtering products & services
+        <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5 truncate">
+          {d.category || 'No category'}
         </p>
       </div>
 
@@ -60,9 +60,9 @@ function AdminCategorycard({ d, onDelete, onEdit, active }) {
         </button>
         <button
           type="button"
-          onClick={() => setConfirmOpen(true)}
           disabled={busy}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 dark:border-red-900/50 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-50"
+          onClick={() => setConfirmOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 px-2.5 py-1.5 text-xs font-medium text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-950/50 disabled:opacity-50"
         >
           <Trash2 size={14} />
           <span className="hidden sm:inline">Delete</span>
@@ -71,13 +71,12 @@ function AdminCategorycard({ d, onDelete, onEdit, active }) {
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Delete this category?"
-        message={`“${d.title}” will be permanently removed.`}
-        confirmLabel="Yes"
-        cancelLabel="No"
+        title="Delete product"
+        message={`Delete “${d.title}”? Services using this product label may be affected.`}
+        confirmLabel="Delete"
         busy={busy}
-        onCancel={() => !busy && setConfirmOpen(false)}
         onConfirm={deleteData}
+        onCancel={() => setConfirmOpen(false)}
       />
     </li>
   )

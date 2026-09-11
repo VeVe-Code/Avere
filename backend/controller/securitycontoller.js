@@ -2,6 +2,22 @@ const { default: mongoose } = require("mongoose")
 const Security = require("../model/Security")
 let removeFile = require('../helpers/removeFile')
 const { parseBool, excludeHidden } = require('../helpers/visibility')
+const {
+  CATALOG_SORT,
+  ORDER_SORT,
+  makeReorderHandler,
+  makeTogglePinnedHandler,
+  makeMoveHandler,
+  makeSwitchHandler,
+  makeNormalizeHandler,
+  parseOrderField,
+} = require('../helpers/catalogOrder')
+const {
+  resolveListSort,
+  getSortMode,
+  displayDateForCreate,
+  applyDisplayDateUpdate,
+} = require('../helpers/catalogSort')
 
 async function listSecurity(req, res, { publicOnly = false } = {}) {
   try {
@@ -17,7 +33,8 @@ async function listSecurity(req, res, { publicOnly = false } = {}) {
 
     let limit = 6
     let page = parseInt(req.query.page, 10) || 1
-    let security = await Security.find(query).populate('category', 'title').skip((page - 1) * limit).limit(limit).sort({ createdAt: -1 })
+    const sort = await resolveListSort('security', { publicOnly })
+    let security = await Security.find(query).populate('category', 'title').skip((page - 1) * limit).limit(limit).sort(sort)
     let totalsecurity = await Security.countDocuments(query)
     let totalPages = Math.max(1, Math.ceil(totalsecurity / limit))
     let links = {
@@ -32,10 +49,10 @@ async function listSecurity(req, res, { publicOnly = false } = {}) {
       links.Loopablelinks.push({ number });
     }
 
-    return res.json({
-      data: security,
-      links
-    })
+    res.set('Cache-Control', 'no-store')
+    const payload = { data: security, links }
+    if (!publicOnly) payload.sortMode = await getSortMode('security')
+    return res.json(payload)
   } catch (e) {
     return res.status(500).json({ msg: "server error" })
   }
@@ -47,13 +64,16 @@ let securitycontroller = {
 
   store: async (req, res) => {
     try {
-      let { title, description, about, category, hidden } = req.body
+      let { title, description, about, category, hidden, pinned, order } = req.body
       let security = await Security.create({
         title,
         description,
         about,
         category,
-        hidden: parseBool(hidden, false)
+        hidden: parseBool(hidden, false),
+        pinned: parseBool(pinned, false),
+        order: parseOrderField(order, 0),
+        displayDate: displayDateForCreate(req.body),
       })
       return res.json(security)
     } catch (e) {
@@ -119,6 +139,13 @@ let securitycontroller = {
       if (updateData.hidden !== undefined) {
         updateData.hidden = parseBool(updateData.hidden, false)
       }
+      if (updateData.pinned !== undefined) {
+        updateData.pinned = parseBool(updateData.pinned, false)
+      }
+      if (updateData.order !== undefined) {
+        updateData.order = parseOrderField(updateData.order, 0)
+      }
+      applyDisplayDateUpdate(updateData, req.body)
       delete updateData.photo
 
       let security = await Security.findByIdAndUpdate(id, updateData, { new: true })
@@ -150,6 +177,12 @@ let securitycontroller = {
       return res.status(500).json({ msg: "server error" })
     }
   },
+
+  togglePinned: makeTogglePinnedHandler(Security, 'not found Security'),
+  reorder: makeReorderHandler(Security, ORDER_SORT, 'security items'),
+  normalizeOrders: makeNormalizeHandler(Security, ORDER_SORT, 'security items'),
+  move: makeMoveHandler(Security, ORDER_SORT, 'security items'),
+  switch: makeSwitchHandler(Security, ORDER_SORT, 'security items'),
 
   upload: async (req, res) => {
     try {

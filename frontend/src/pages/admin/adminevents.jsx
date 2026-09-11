@@ -1,91 +1,114 @@
-
-import axios from '../../helper/axios.js'
-import React, { useEffect, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import EventsPagi from '../../components/admin/AdminPagination.jsx';
-import AdminEventsCard from '../../components/admin/AdminEventsCard.jsx';
+import React from 'react'
+import AdminCatalogCard from '../../components/admin/AdminCatalogCard.jsx'
+import Pagination from '../../components/admin/AdminPagination.jsx'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAdminCatalogPage } from '../../hooks/useAdminCatalogPage.jsx'
 
 function adminevents() {
-         
-let [events,setEvents] = React.useState([])
-let [Links , setLinks] = useState(null)
-let [loading, setLoading] = useState(true)
-let location = useLocation()
-let searchQuery = new URLSearchParams(location.search)
-let navigate = useNavigate()
-let page = searchQuery.get('page') || 1
+  const location = useLocation()
+  const navigate = useNavigate()
+  const searchQuery = new URLSearchParams(location.search)
+  let page = searchQuery.get('page') || 1
+  page = parseInt(page) ? parseInt(page) : 1
 
-page = parseInt(page)
-useEffect(()=>{
-    let fetchevents = async() =>{
-      try {
-        setLoading(true)
-        let res = await axios.get('/api/events?page=' + page);
-        setEvents(res.data.data);
-        setLinks(res.data.Links)
-        scrollTo(0,0);
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
+  const {
+    items: events,
+    setItems: setEvents,
+    links,
+    loading,
+    reorder,
+    onHiddenChange,
+    onPinnedChange,
+    SortBar,
+    ReorderBar,
+    manualOrder,
+  } = useAdminCatalogPage({
+    fetchUrl: '/api/events',
+    reorderUrl: '/api/events/reorder',
+    moveStorageKey: 'admin-move:events',
+    catalogKey: 'events',
+    adminListPath: '/admin/adminevents',
+    page,
+    linksKey: 'Links',
+  })
+
+  const ondeleted = (_id) => {
+    if (events.length === 1 && page > 1) {
+      navigate('/admin/adminevents?page=' + (page - 1))
+    } else {
+      setEvents((prev) => prev.filter((e) => e._id !== _id))
     }
-    fetchevents()
-    
-},[page])
-
-
-
-
-
-let ondeleted = (_id) => {
-if(events.length == 1 && page > 1 ){
- navigate('/admin/adminevents?page=' + (page-1))
-}else{
-   setEvents(prev => prev.filter(e => e._id !== _id))
-}
-}
-
-let onHiddenChange = (_id, hidden) => {
-  setEvents(prev => prev.map(e => e._id === _id ? { ...e, hidden } : e))
-}
+  }
 
   return (
-   <>
-      <div className="max-w-7xl mx-auto">
-    
-    <div className="flex justify-between items-center mt-7 ">
-        <h1 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">Events</h1>
-     <Link to='/admin/adminevents/create'>
-        <button className="bg-blue-400 text-white py-3 px-2 rounded-2xl">Create Events</button></Link>
-    </div>
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
+            Events
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            {reorder.movingId
+              ? 'Go to any page, tap “Move here” on the target, or Cancel.'
+              : reorder.switchingId
+                ? 'Go to any page, tap “Switch here” on another item to swap, or Cancel.'
+                : manualOrder
+                  ? 'Pin events, drag to reorder, Move to insert, or Switch to swap two items.'
+                  : 'Sorted by display date. Change List sorting above to use Manual order.'}
+            {reorder.savingOrder ? ' Saving order…' : ''}
+          </p>
+        </div>
+        <Link
+          to="/admin/adminevents/create"
+          className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          Create Event
+        </Link>
+      </div>
+
+      <SortBar />
+
+      {(reorder.movingId || reorder.switchingId) ? <ReorderBar /> : null}
 
       {loading ? (
         <div className="flex justify-center py-20">
           <div className="w-9 h-9 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-       
-       {!!events.length &&(events.map(e =>
-        (
-            <AdminEventsCard key={e._id} e={e} ondeleted={ondeleted} onHiddenChange={onHiddenChange} />
-        )
-       ))}
-       {!events.length && (
-         <p className="col-span-full text-center text-slate-500 dark:text-slate-400 py-12 text-sm">No events yet.</p>
-       )}
+        <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+            {!!events.length &&
+              events.map((e) => (
+                <AdminCatalogCard
+                  key={e._id}
+                  item={e}
+                  title={e.title}
+                  description={e.description}
+                  photo={e.photo}
+                  detailPath={`/admin/adminevents/${e._id}`}
+                  editPath={`/admin/adminevents/edit/${e._id}`}
+                  apiBase="/api/events"
+                  deleteTitle="Delete this event?"
+                  deleteMessage={`“${e.title}” will be permanently removed.`}
+                  onDelete={ondeleted}
+                  onHiddenChange={onHiddenChange}
+                  onPinnedChange={onPinnedChange}
+                  {...reorder.getCardReorderProps(e)}
+                />
+              ))}
+            {!events.length && (
+              <p className="col-span-full text-center text-slate-500 dark:text-slate-400 py-12 text-sm">
+                No events yet.
+              </p>
+            )}
         </div>
       )}
 
-     
+      <div className="flex justify-center mt-10">
+        {!!links && (
+          <Pagination basePath="/admin/adminevents" links={links} page={page} />
+        )}
       </div>
-      <div className='mt-5 mx-auto flex justify-center'>
-       {!loading && !!Links && (
-         <EventsPagi basePath="/admin/adminevents" links={Links} page={page} />
-       )}
-      </div>
-   </>
+    </>
   )
 }
 

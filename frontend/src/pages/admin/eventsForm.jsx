@@ -18,6 +18,8 @@ import {
   FormActions,
   fieldClass,
 } from '../../components/admin/AdminFormUI'
+import DisplayDateField from '../../components/admin/DisplayDateField.jsx'
+import { displayDateToApi, formatDateForInput, todayDateInput } from '../../helper/displayDate.js'
 
 function EventsForm() {
   let { id } = useParams()
@@ -27,6 +29,7 @@ function EventsForm() {
   let [description, setDescription] = useState('')
   let [about, setAbout] = useState('')
   let [hidden, setHidden] = useState(false)
+  let [displayDate, setDisplayDate] = useState(todayDateInput())
   let [file, setFile] = useState(null)
   let [preview, setPreview] = useState(null)
   let [error, setError] = useState({})
@@ -58,7 +61,7 @@ function EventsForm() {
 
     try {
       setSaving(true)
-      let events = { title, description, about, hidden }
+      let events = { title, description, about, hidden, displayDate: displayDateToApi(displayDate) }
       let res
 
       if (id) {
@@ -98,6 +101,7 @@ function EventsForm() {
         setDescription(res.data.description)
         setAbout(res.data.about)
         setHidden(Boolean(res.data.hidden))
+        setDisplayDate(formatDateForInput(res.data.displayDate || res.data.createdAt))
         if (res.data.photo) setPreview(assetUrl(res.data.photo))
       }
     }
@@ -183,6 +187,10 @@ function EventsForm() {
             className={fieldClass}
             aria-invalid={Boolean(error.description)}
           />
+        </FormField>
+
+        <FormField label="Display date" hint="Used when list sorting is set to Display date.">
+          <DisplayDateField value={displayDate} onChange={setDisplayDate} />
         </FormField>
 
         <FormField

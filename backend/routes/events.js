@@ -9,6 +9,11 @@ const adminOnly = [AuthMiddleware, requireAdmin];
 
 Router.get('/', ...adminOnly, eventscontroller.index);
 
+Router.post('/reorder', ...adminOnly, eventscontroller.reorder);
+Router.post('/normalize-orders', ...adminOnly, eventscontroller.normalizeOrders);
+Router.post('/move', ...adminOnly, eventscontroller.move);
+Router.post('/switch', ...adminOnly, eventscontroller.switch);
+
 Router.post(
   '/',
   ...adminOnly,
@@ -26,6 +31,8 @@ Router.get('/:id', ...adminOnly, eventscontroller.show);
 Router.patch('/:id', ...adminOnly, eventscontroller.update);
 
 Router.patch('/:id/hidden', ...adminOnly, eventscontroller.toggleHidden);
+
+Router.patch('/:id/pinned', ...adminOnly, eventscontroller.togglePinned);
 
 Router.delete('/:id', ...adminOnly, eventscontroller.destroy);
 

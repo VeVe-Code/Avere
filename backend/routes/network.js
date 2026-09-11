@@ -8,6 +8,10 @@ const { AuthMiddleware, requireAdmin } = require('../middleware/AuthMiddleware')
 const adminOnly = [AuthMiddleware, requireAdmin];
 
 router.get('/api/network', ...adminOnly, networkcontroller.index)
+router.post('/api/network/reorder', ...adminOnly, networkcontroller.reorder)
+router.post('/api/network/normalize-orders', ...adminOnly, networkcontroller.normalizeOrders)
+router.post('/api/network/move', ...adminOnly, networkcontroller.move)
+router.post('/api/network/switch', ...adminOnly, networkcontroller.switch)
 router.post('/api/network', ...adminOnly, [
     body('title').notEmpty(),
     body('description').notEmpty(),
@@ -29,6 +33,7 @@ router.post('/api/network/:id/upload', ...adminOnly, [
 ],handleerrormsg,networkcontroller.upload)
 router.patch('/api/network/:id', ...adminOnly, networkcontroller.update)
 router.patch('/api/network/:id/hidden', ...adminOnly, networkcontroller.toggleHidden)
+router.patch('/api/network/:id/pinned', ...adminOnly, networkcontroller.togglePinned)
 router.delete('/api/network/:id', ...adminOnly, networkcontroller.destroy)
 
 

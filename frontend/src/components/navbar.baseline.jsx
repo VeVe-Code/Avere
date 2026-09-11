@@ -95,10 +95,15 @@ function Navbar() {
     },
     {
       id: 'news',
+      name: t('nav.news'),
+      path: '/news',
+    },
+    {
+      id: 'knowledgeEvents',
       name: t('nav.newsEvents'),
       wide: false,
       dropdown: [
-        { name: t('nav.news'), path: '/knowledge' },
+        { name: t('nav.knowledge'), path: '/knowledge' },
         { name: t('nav.events'), path: '/events' },
       ],
     },
@@ -133,12 +138,18 @@ function Navbar() {
 
       <div className="flex justify-between items-center relative z-20">
         <motion.div animate={{ scale: scrolled ? 0.88 : 1 }} transition={{ duration: 0.35 }}>
-          <Link to="/">
+          <Link to="/" className="relative block h-12 lg:h-14">
             <motion.img
-              src="/myphoto2.jpg"
-              alt="logo"
-              whileHover={{ scale: 1.04 }}
-              className="w-20 lg:w-32 rounded-xl shadow-2xl"
+              src="/logo.png"
+              alt="Avere Ricco"
+              whileHover={{ scale: 1.03 }}
+              className="h-full w-auto object-contain dark:hidden"
+            />
+            <motion.img
+              src="/logo-dark.png"
+              alt="Avere Ricco"
+              whileHover={{ scale: 1.03 }}
+              className="hidden h-full w-auto object-contain dark:block"
             />
           </Link>
         </motion.div>

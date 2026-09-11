@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import axios from "../helper/axios";
 import assetUrl from "../helper/assetUrl";
+import { catalogDateValue, formatCatalogDate } from "../helper/displayDate.js";
 
 export default function UpcomingEvents() {
   const [data, setData] = useState([]);
@@ -47,10 +48,10 @@ export default function UpcomingEvents() {
               On the calendar
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Upcoming Events
+              Events
             </h2>
             <p className="mt-2 text-sm sm:text-base text-slate-500 dark:text-slate-400">
-              Meetups, demos, and community sessions from the Avere team.
+              Meetups, demos, and technology trend updates.
             </p>
           </div>
 
@@ -281,7 +282,7 @@ export default function UpcomingEvents() {
                     <div className="mt-3 flex items-center justify-between gap-2">
                       <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
                         <CalendarDays size={13} />
-                        {new Date(item.createdAt).toLocaleDateString()}
+                        {formatCatalogDate(item)}
                       </span>
                       <span className="inline-flex items-center gap-1 text-sm font-medium
                         text-slate-600 dark:text-slate-300

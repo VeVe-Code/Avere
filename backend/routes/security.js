@@ -9,6 +9,10 @@ const adminOnly = [AuthMiddleware, requireAdmin];
 
 
 router.get('/api/security', ...adminOnly, securitycontroller.index)
+router.post('/api/security/reorder', ...adminOnly, securitycontroller.reorder)
+router.post('/api/security/normalize-orders', ...adminOnly, securitycontroller.normalizeOrders)
+router.post('/api/security/move', ...adminOnly, securitycontroller.move)
+router.post('/api/security/switch', ...adminOnly, securitycontroller.switch)
 router.post('/api/security', ...adminOnly, [
     body('title').notEmpty(),
     body('description').notEmpty(),
@@ -29,6 +33,7 @@ router.post('/api/security/:id/upload', ...adminOnly, [upload.single('photo'),
 router.delete('/api/security/:id', ...adminOnly, securitycontroller.destory)
 router.patch('/api/security/:id', ...adminOnly, securitycontroller.update)
 router.patch('/api/security/:id/hidden', ...adminOnly, securitycontroller.toggleHidden)
+router.patch('/api/security/:id/pinned', ...adminOnly, securitycontroller.togglePinned)
 
 
 

@@ -52,7 +52,7 @@ function ServiceDetail() {
         className="max-w-6xl w-full mx-auto bg-white dark:bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-transparent dark:border-slate-800"
       >
         {/* Image */}
-        <div className="h-[320px] md:h-[420px] overflow-hidden">
+        <div className="pt-[2cm] px-[2cm] h-[calc(320px+2cm)] md:h-[calc(420px+2cm)] overflow-hidden">
           <img
             src={assetUrl(data.photo)}
             alt={data.name}
@@ -62,14 +62,16 @@ function ServiceDetail() {
 
         {/* Content */}
         <div className="p-8 md:p-12 space-y-6 min-w-0 max-w-full overflow-hidden break-words">
-          <div className="flex flex-wrap items-start justify-between gap-4 min-w-0">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-slate-100 break-all min-w-0 flex-1">
-            {data.name || data.title}
-          </h1>
-          <SaveButton type="service" id={id} />
+          <div className="space-y-3 min-w-0">
+            <div className="flex justify-end">
+              <SaveButton type="service" id={id} />
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-slate-100 break-words min-w-0">
+              {data.name || data.title}
+            </h1>
           </div>
 
-          <p className="text-lg text-gray-600 dark:text-slate-400 leading-relaxed break-all">
+          <p className="text-lg text-gray-600 dark:text-slate-400 leading-relaxed break-words">
             {data.description}
           </p>
 

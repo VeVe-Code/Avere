@@ -7,6 +7,7 @@ import assetUrl from '../helper/assetUrl'
 import SaveButton from '../components/SaveButton'
 import SEO from '../components/SEO'
 import RichTextContent from '../components/RichTextContent'
+import { catalogDateValue, formatCatalogDate } from '../helper/displayDate.js'
 
 function KnowledgeDetail() {
   let { id } = useParams()
@@ -48,8 +49,8 @@ function KnowledgeDetail() {
   return (
     <article className="min-h-screen relative bg-white dark:bg-slate-950">
       <SEO
-        title={`${data.title || 'News'} - Avere`}
-        description={data.description || 'Avere news article'}
+        title={`${data.title || 'Knowledge'} - Avere`}
+        description={data.description || 'Avere knowledge article'}
       />
 
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#eff6ff_0%,_#f8fafc_50%,_#f1f5f9_100%)] dark:bg-[radial-gradient(ellipse_at_top,_#0f172a_0%,_#020617_50%,_#020617_100%)]" />
@@ -88,15 +89,15 @@ function KnowledgeDetail() {
                   className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Back to News
+                  Back to Knowledge
                 </Link>
                 <SaveButton type="knowledge" id={id} />
               </div>
 
               <header className="space-y-4 min-w-0 border-b border-slate-100 dark:border-slate-800 pb-8">
-                {data.createdAt && (
+                {catalogDateValue(data) && (
                   <time className="text-xs font-medium tracking-wide uppercase text-blue-700 dark:text-blue-400">
-                    {new Date(data.createdAt).toLocaleDateString(undefined, {
+                    {formatCatalogDate(data, {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',

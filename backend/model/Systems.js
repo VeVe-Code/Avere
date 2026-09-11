@@ -24,6 +24,18 @@ let systemSchema = new Schema({
     hidden: {
         type: Boolean,
         default: false
+    },
+    pinned: {
+        type: Boolean,
+        default: false
+    },
+    order: {
+        type: Number,
+        default: 0
+    },
+    displayDate: {
+        type: Date,
+        default: Date.now
     }
 
 },{

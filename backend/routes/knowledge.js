@@ -14,10 +14,11 @@ const adminOnly = [AuthMiddleware, requireAdmin];
 ========================= */
 Router.get('/api/knowledge', ...adminOnly, knowledgecontroller.index);
 
+Router.post('/api/knowledge/reorder', ...adminOnly, knowledgecontroller.reorder);
+Router.post('/api/knowledge/normalize-orders', ...adminOnly, knowledgecontroller.normalizeOrders);
+Router.post('/api/knowledge/move', ...adminOnly, knowledgecontroller.move);
+Router.post('/api/knowledge/switch', ...adminOnly, knowledgecontroller.switch);
 
-/* =========================
-   CREATE KNOWLEDGE
-========================= */
 Router.post(
   '/api/knowledge',
   ...adminOnly,
@@ -68,6 +69,8 @@ Router.patch('/api/knowledge/:id', ...adminOnly, knowledgecontroller.update);
    TOGGLE HIDDEN (public visibility)
 ========================= */
 Router.patch('/api/knowledge/:id/hidden', ...adminOnly, knowledgecontroller.toggleHidden);
+
+Router.patch('/api/knowledge/:id/pinned', ...adminOnly, knowledgecontroller.togglePinned);
 
 /* =========================
    DELETE KNOWLEDGE

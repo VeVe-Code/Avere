@@ -18,6 +18,8 @@ import {
   FormActions,
   fieldClass,
 } from "../../components/admin/AdminFormUI";
+import DisplayDateField from "../../components/admin/DisplayDateField.jsx";
+import { displayDateToApi, formatDateForInput, todayDateInput } from "../../helper/displayDate.js";
 
 function ServiceForm() {
   let { id } = useParams();
@@ -27,6 +29,8 @@ function ServiceForm() {
   let [description, setDescription] = useState("");
   let [about, setAbout] = useState("");
   let [hidden, setHidden] = useState(false);
+  let [pinned, setPinned] = useState(false);
+  let [displayDate, setDisplayDate] = useState(todayDateInput());
   let [category, setCategory] = useState("");
   let [categories, setCategories] = useState([]);
   let [file, setFile] = useState(null);
@@ -69,7 +73,15 @@ function ServiceForm() {
 
     try {
       setSaving(true);
-      let service = { name, description, about, category, hidden };
+      let service = {
+        name,
+        description,
+        about,
+        category,
+        hidden,
+        pinned,
+        displayDate: displayDateToApi(displayDate),
+      };
       let res;
       if (id) {
         res = await axios.patch("/api/service/" + id, service);
@@ -122,6 +134,8 @@ function ServiceForm() {
         setDescription(data.description);
         setAbout(data.about);
         setHidden(Boolean(data.hidden));
+        setPinned(Boolean(data.pinned));
+        setDisplayDate(formatDateForInput(data.displayDate || data.createdAt));
         setCategory(data.category?._id || data.category || "");
         if (data.photo) setPreview(assetUrl(data.photo));
       }
@@ -230,6 +244,16 @@ function ServiceForm() {
         </FormField>
 
         <FormField
+          label="Display date"
+          hint="Used when list sorting is set to Display date (newest first). Manual order is unchanged."
+        >
+          <DisplayDateField
+            value={displayDate}
+            onChange={setDisplayDate}
+          />
+        </FormField>
+
+        <FormField
           label="Visibility"
           hint="Hidden items stay in admin but are not shown on the public site."
         >
@@ -242,6 +266,23 @@ function ServiceForm() {
             />
             <span className="text-sm text-slate-800 dark:text-slate-200">
               Hide from public site
+            </span>
+          </label>
+        </FormField>
+
+        <FormField
+          label="Pin to top"
+          hint="Pinned services appear first on the public Services page."
+        >
+          <label className="flex items-center gap-3 cursor-pointer select-none rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3">
+            <input
+              type="checkbox"
+              checked={pinned}
+              onChange={(e) => setPinned(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm text-slate-800 dark:text-slate-200">
+              Pin this service to the top
             </span>
           </label>
         </FormField>

@@ -5,6 +5,7 @@ import { ToastContainer, toast, Bounce } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "../helper/axios";
 import SEO from "../components/SEO";
+import { toTelHref, useContactInfo } from "../contexts/ContactInfoContext";
 
 function FieldMsg({ message }) {
   if (!message) return null;
@@ -17,12 +18,14 @@ function FieldMsg({ message }) {
 }
 
 function ContactUs() {
+  const { info } = useContactInfo();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phno, setPhno] = useState("");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const telHref = toTelHref(info.phone);
 
   const clearField = (key) =>
     setErrors((prev) => {
@@ -138,26 +141,49 @@ function ContactUs() {
             </h2>
 
             <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <Mail className="text-blue-600" />
-                <span className="text-gray-700 dark:text-slate-300">Email:  info@avere.example.com</span>
-              </div>
-              <div className="flex items-center gap-4">
-                <Phone className="text-blue-600" />
-                <span className="text-gray-700 dark:text-slate-300">Tel: +66 21245263</span>
-              </div>
-              <div className="flex items-center gap-4">
-                <MapPin className="text-blue-600" />
-                <span className="text-gray-700 dark:text-slate-300">
-2823/3 Charoen Krung Road, Bang Kho Laem,
-Bang Kho Laem, Bangkok 10120
-</span>
-              </div>
+              {info.email && (
+                <div className="flex items-center gap-4">
+                  <Mail className="text-blue-600 shrink-0" />
+                  <a
+                    href={`mailto:${info.email}`}
+                    className="text-gray-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400"
+                  >
+                    Email: {info.email}
+                  </a>
+                </div>
+              )}
+              {info.phone && (
+                <div className="flex items-center gap-4">
+                  <Phone className="text-blue-600 shrink-0" />
+                  {telHref ? (
+                    <a
+                      href={telHref}
+                      className="text-gray-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400"
+                    >
+                      Tel: {info.phone}
+                    </a>
+                  ) : (
+                    <span className="text-gray-700 dark:text-slate-300">
+                      Tel: {info.phone}
+                    </span>
+                  )}
+                </div>
+              )}
+              {info.address && (
+                <div className="flex items-start gap-4">
+                  <MapPin className="text-blue-600 shrink-0 mt-0.5" />
+                  <span className="text-gray-700 dark:text-slate-300 whitespace-pre-line">
+                    {info.address}
+                  </span>
+                </div>
+              )}
             </div>
 
-            <p className="mt-10 text-sm text-gray-500 dark:text-slate-400">
-              We reply within 24 hours.
-            </p>
+            {info.note && (
+              <p className="mt-10 text-sm text-gray-500 dark:text-slate-400">
+                {info.note}
+              </p>
+            )}
           </motion.div>
 
           {/* Right Form */}

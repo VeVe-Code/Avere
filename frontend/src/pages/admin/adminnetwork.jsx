@@ -1,76 +1,108 @@
-import React, { useEffect, useState } from 'react'
-import AdminNetworkCard from '../../components/admin/adminnetworkCard' 
-import axios from '../../helper/axios'
+import React from 'react'
+import AdminCatalogCard from '../../components/admin/AdminCatalogCard.jsx'
+import Pagination from '../../components/admin/AdminPagination.jsx'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import NetWorkPagi from '../../components/admin/AdminPagination'
+import { useAdminCatalogPage } from '../../hooks/useAdminCatalogPage.jsx'
 
 function adminnetwork() {
-  let location = useLocation()
-  let searchgQuery = new URLSearchParams(location.search)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const searchQuery = new URLSearchParams(location.search)
+  let page = parseInt(searchQuery.get('page')) || 1
 
-  let page = parseInt(searchgQuery.get("page")) || 1;   // ✅ FIX
+  const {
+    items: network,
+    setItems: setNetwork,
+    links,
+    loading,
+    reorder,
+    onHiddenChange,
+    onPinnedChange,
+    SortBar,
+    ReorderBar,
+    manualOrder,
+  } = useAdminCatalogPage({
+    fetchUrl: '/api/network',
+    reorderUrl: '/api/network/reorder',
+    moveStorageKey: 'admin-move:network',
+    catalogKey: 'network',
+    adminListPath: '/admin/adminnetwork',
+    page,
+  })
 
-  let [network, setNetwork] = useState([])
-  let [links, setLinks] = useState(null)
-  let [loading, setLoading] = useState(true)
-  let navigate = useNavigate()
-
-  useEffect(() => {
-    let fetchNetWork = async () => {
-      try {
-        setLoading(true)
-        let res = await axios.get('/api/network?page=' + page)
-        setNetwork(res.data.data)
-        setLinks(res.data.links)
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
+  const ondeleted = (_id) => {
+    if (network.length === 1 && page > 1) {
+      navigate(`/admin/adminnetwork?page=${page - 1}`)
+    } else {
+      setNetwork((prev) => prev.filter((n) => n._id !== _id))
     }
-    fetchNetWork()
-    scrollTo(0,0)
-  }, [page])
-
-  let ondeleted = (_id) => {
-     if(network.length === 1 && page > 1 ){
-            navigate(`/admin/adminnetwork?page=${page-1}`)
-     }else{
-       setNetwork(prev => prev.filter(n => n._id !== _id))
-     }
-  }
-
-  let onHiddenChange = (_id, hidden) => {
-    setNetwork(prev => prev.map(n => n._id === _id ? { ...n, hidden } : n))
   }
 
   return (
     <>
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mt-7 ">
-          <h1 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">NetWork</h1>
-          <Link to="/admin/adminnetwork/create"><button className="bg-blue-400 text-white py-3 px-2 rounded-2xl">Create NetWork</button></Link>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
+            Network
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            {reorder.movingId
+              ? 'Go to any page, tap “Move here” on the target, or Cancel.'
+              : reorder.switchingId
+                ? 'Go to any page, tap “Switch here” on another item to swap, or Cancel.'
+                : manualOrder
+                  ? 'Pin items, drag to reorder, Move to insert, or Switch to swap two items.'
+                  : 'Sorted by display date. Change List sorting above to use Manual order.'}
+            {reorder.savingOrder ? ' Saving order…' : ''}
+          </p>
         </div>
-
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-9 h-9 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : (
-        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-          {network.map(n => (
-            <AdminNetworkCard n={n} key={n._id} ondeleted={ondeleted} onHiddenChange={onHiddenChange}/>
-          ))}
-          {!network.length && (
-            <p className="col-span-full text-center text-slate-500 dark:text-slate-400 py-12 text-sm">No network items yet.</p>
-          )}
-        </div>
-        )}
+        <Link
+          to="/admin/adminnetwork/create"
+          className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          Create Network
+        </Link>
       </div>
 
-      <div className='flex mx-auto justify-center mt-10'>
-        {!loading && links && (
-          <NetWorkPagi basePath="/admin/adminnetwork" links={links} page={page} />
+      <SortBar />
+
+      {(reorder.movingId || reorder.switchingId) ? <ReorderBar /> : null}
+
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="w-9 h-9 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : (
+        <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+            {network.map((n) => (
+              <AdminCatalogCard
+                key={n._id}
+                item={n}
+                title={n.title}
+                description={n.description}
+                photo={n.photo}
+                detailPath={`/admin/adminnetwork/${n._id}`}
+                editPath={`/admin/adminnetwork/edit/${n._id}`}
+                apiBase="/api/network"
+                deleteTitle="Delete this network item?"
+                deleteMessage={`“${n.title}” will be permanently removed.`}
+                onDelete={ondeleted}
+                onHiddenChange={onHiddenChange}
+                onPinnedChange={onPinnedChange}
+                {...reorder.getCardReorderProps(n)}
+              />
+            ))}
+            {!network.length && (
+              <p className="col-span-full text-center text-slate-500 dark:text-slate-400 py-12 text-sm">
+                No network items yet.
+              </p>
+            )}
+        </div>
+      )}
+
+      <div className="flex justify-center mt-10">
+        {links && (
+          <Pagination basePath="/admin/adminnetwork" links={links} page={page} />
         )}
       </div>
     </>

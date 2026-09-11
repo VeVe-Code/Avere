@@ -2,6 +2,22 @@ const mongoose = require("mongoose");
 const Events = require("../model/Events");
 let removeFile = require('../helpers/removeFile');
 const { parseBool, excludeHidden } = require('../helpers/visibility');
+const {
+  CATALOG_SORT,
+  ORDER_SORT,
+  makeReorderHandler,
+  makeTogglePinnedHandler,
+  makeMoveHandler,
+  makeSwitchHandler,
+  makeNormalizeHandler,
+  parseOrderField,
+} = require('../helpers/catalogOrder');
+const {
+  resolveListSort,
+  getSortMode,
+  displayDateForCreate,
+  applyDisplayDateUpdate,
+} = require('../helpers/catalogSort');
 
 async function listEvents(req, res, { publicOnly = false } = {}) {
   try {
@@ -13,10 +29,11 @@ async function listEvents(req, res, { publicOnly = false } = {}) {
 
     let limit = 6;
     let page = parseInt(req.query.page, 10) || 1;
+    const sort = await resolveListSort('events', { publicOnly });
     let events = await Events.find(query)
       .skip((page - 1) * limit)
       .limit(limit)
-      .sort({ createdAt: -1 });
+      .sort(sort);
     let totalEvents = await Events.countDocuments(query);
     let totalPages = Math.max(1, Math.ceil(totalEvents / limit));
     let Links = {
@@ -30,7 +47,10 @@ async function listEvents(req, res, { publicOnly = false } = {}) {
       Links.LoopableLinks.push({ number: index + 1 });
     }
 
-    return res.json({ data: events, Links });
+    res.set('Cache-Control', 'no-store')
+    const payload = { data: events, Links }
+    if (!publicOnly) payload.sortMode = await getSortMode('events')
+    return res.json(payload);
   } catch (e) {
     return res.status(500).json({ msg: "server error" });
   }
@@ -42,12 +62,15 @@ let eventscontroller = {
 
   store: async (req, res) => {
     try {
-      let { title, description, about, hidden } = req.body;
+      let { title, description, about, hidden, pinned, order } = req.body;
       let events = await Events.create({
         title,
         description,
         about,
-        hidden: parseBool(hidden, false)
+        hidden: parseBool(hidden, false),
+        pinned: parseBool(pinned, false),
+        order: parseOrderField(order, 0),
+        displayDate: displayDateForCreate(req.body),
       });
       return res.json(events);
     } catch (e) {
@@ -97,6 +120,13 @@ let eventscontroller = {
       if (updateData.hidden !== undefined) {
         updateData.hidden = parseBool(updateData.hidden, false);
       }
+      if (updateData.pinned !== undefined) {
+        updateData.pinned = parseBool(updateData.pinned, false);
+      }
+      if (updateData.order !== undefined) {
+        updateData.order = parseOrderField(updateData.order, 0);
+      }
+      applyDisplayDateUpdate(updateData, req.body)
       // don't wipe photo via body
       delete updateData.photo;
       let events = await Events.findByIdAndUpdate(id, updateData, { new: true });
@@ -126,6 +156,12 @@ let eventscontroller = {
       return res.status(500).json({ msg: "server error" });
     }
   },
+
+  togglePinned: makeTogglePinnedHandler(Events, 'Events not found'),
+  reorder: makeReorderHandler(Events, ORDER_SORT, 'events'),
+  normalizeOrders: makeNormalizeHandler(Events, ORDER_SORT, 'events'),
+  move: makeMoveHandler(Events, ORDER_SORT, 'events'),
+  switch: makeSwitchHandler(Events, ORDER_SORT, 'events'),
 
   destroy: async (req, res) => {
     try {

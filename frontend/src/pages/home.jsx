@@ -6,20 +6,23 @@ import { Link } from 'react-router-dom'
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import SEO from "../components/SEO";
 import assetUrl from '../helper/assetUrl'
+import { formatCatalogDate } from '../helper/displayDate.js'
 import { ArrowUpRight, Cloud, Shield, Wifi, Headphones, Newspaper } from 'lucide-react'
 
 function Home({title,description,link}) {
-  const images = [
-    "/myphoto10.jpg",
-    "/myphoto3.jpg",
-    "/myphoto4.jpg",
-    "/myphoto.jpg",
-    "/myphoto5.jpg",
-    "/myphoto6.jpg",
-    "/myphoto7.jpg",
-  ];
-  const SLIDE_MS = 7000;
+  const FALLBACK_IMAGES = ["/hero-fallback.png"];
+  const DEFAULT_SLIDE_SEC = 7;
 
+  const clampSlideSec = (value) => {
+    let n = Number(value)
+    if (!Number.isFinite(n)) return DEFAULT_SLIDE_SEC
+    let i = Math.round(n)
+    if (i < 5 || i > 10) return DEFAULT_SLIDE_SEC
+    return i
+  }
+
+  const [images, setImages] = useState(FALLBACK_IMAGES);
+  const [slideSeconds, setSlideSeconds] = useState([DEFAULT_SLIDE_SEC]);
   const [current, setCurrent] = useState(0);
   const [progressKey, setProgressKey] = useState(0);
   let [data, setData] = useState([])
@@ -27,20 +30,52 @@ function Home({title,description,link}) {
   let [newsLoading, setNewsLoading] = useState(true)
   let [positionLoading, setPositionLoading] = useState(true)
 
+  const slideMs =
+    (slideSeconds[current] ?? DEFAULT_SLIDE_SEC) * 1000
+
+  useEffect(() => {
+    let fetchSlides = async () => {
+      try {
+        let res = await axios.get('/api/publicheroslides')
+        let slides = Array.isArray(res.data?.data) ? res.data.data : []
+        let urls = slides
+          .map((s) => assetUrl(s.photo))
+          .filter(Boolean)
+        if (urls.length) {
+          setImages(urls)
+          setSlideSeconds(
+            slides
+              .filter((s) => assetUrl(s.photo))
+              .map((s) => clampSlideSec(s.durationSeconds))
+          )
+        }
+      } catch {
+        // keep fallback photos if API is empty / down
+      }
+    }
+    fetchSlides()
+  }, [])
+
   useEffect(() => {
     images.forEach((src) => {
       const img = new Image();
       img.src = src;
     });
-  }, []);
+  }, [images]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    if (!images.length) return
+    const timeout = setTimeout(() => {
       setCurrent((prev) => (prev + 1) % images.length);
       setProgressKey((k) => k + 1);
-    }, SLIDE_MS);
-    return () => clearInterval(interval);
-  }, [images.length]);
+    }, slideMs);
+    return () => clearTimeout(timeout);
+  }, [images.length, current, slideMs]);
+
+  useEffect(() => {
+    setCurrent(0);
+    setProgressKey((k) => k + 1);
+  }, [images]);
 
   const goToSlide = (i) => {
     setCurrent(i);
@@ -84,7 +119,7 @@ function Home({title,description,link}) {
   return (
 <>
    <div
-      className="relative w-full h-[78vh] md:h-[92vh] lg:min-h-[100svh] overflow-hidden"
+      className="relative w-full mt-[0.5cm] h-[78vh] md:h-[92vh] lg:min-h-[100svh] overflow-hidden"
     >
    <SEO 
   title="Avere | IT & Network Solutions Thailand"
@@ -110,7 +145,7 @@ function Home({title,description,link}) {
               i === current
                 ? {
                     opacity: { duration: 1.35, ease: [0.22, 1, 0.36, 1] },
-                    scale: { duration: SLIDE_MS / 1000, ease: 'linear' },
+                    scale: { duration: slideMs / 1000, ease: 'linear' },
                   }
                 : { opacity: { duration: 1.35, ease: [0.22, 1, 0.36, 1] } }
             }
@@ -137,15 +172,15 @@ function Home({title,description,link}) {
             shadow-[0_4px_24px_-8px_rgba(0,0,0,0.2)]"
         >
           <p className="text-[11px] sm:text-xs font-semibold tracking-[0.28em] uppercase text-blue-300">
-            IT Solutions Thailand
+            A World Class Outsourcing
           </p>
 
           <h1 className="mt-3 sm:mt-4 text-white text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-none">
-            Avere
+            AVERE RICCO
           </h1>
 
           <p className="mt-4 sm:mt-5 mx-auto max-w-md text-sm sm:text-base md:text-lg text-white/90 leading-relaxed">
-            Where business needs become solutions.
+            outsourcing services is designed to help our clients to achieve cost savings in all areas
           </p>
 
           <div className="mt-7 sm:mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -182,7 +217,7 @@ function Home({title,description,link}) {
               key={progressKey}
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
-              transition={{ duration: SLIDE_MS / 1000, ease: 'linear' }}
+              transition={{ duration: slideMs / 1000, ease: 'linear' }}
               className="h-full origin-left bg-gradient-to-r from-blue-400 to-cyan-300"
             />
           </div>
@@ -205,115 +240,181 @@ function Home({title,description,link}) {
       </div>
     </div>
     
-  <section className="relative overflow-hidden px-6 sm:px-12 lg:px-28 xl:px-40 py-16 sm:py-20 lg:py-24 bg-gray-50 dark:bg-slate-950">
+  <section className="relative overflow-hidden px-6 sm:px-12 lg:px-28 xl:px-40 pt-4 pb-6 sm:pt-5 sm:pb-7 lg:pt-6 lg:pb-8 bg-white dark:bg-[#060b11]">
     <div
       aria-hidden
       className="pointer-events-none absolute inset-0
-        bg-[radial-gradient(ellipse_at_10%_0%,rgba(37,99,235,0.1),transparent_45%),radial-gradient(ellipse_at_90%_40%,rgba(14,165,233,0.08),transparent_40%)]
-        dark:bg-[radial-gradient(ellipse_at_10%_0%,rgba(37,99,235,0.2),transparent_45%),radial-gradient(ellipse_at_90%_40%,rgba(56,189,248,0.1),transparent_40%)]"
+        bg-[radial-gradient(ellipse_at_8%_0%,rgba(37,99,235,0.06),transparent_40%),radial-gradient(ellipse_at_92%_8%,rgba(99,102,241,0.06),transparent_36%)]
+        dark:bg-none"
     />
 
-    <div className="relative max-w-[1400px] mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        className="mb-10 sm:mb-14 max-w-2xl"
-      >
-        <p className="text-[11px] sm:text-xs font-semibold tracking-[0.22em] uppercase text-blue-600 dark:text-blue-400 mb-3">
-          What we deliver
-        </p>
-        <h2 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold tracking-tight text-slate-900 dark:text-white">
-          Solutions &amp; Services
-        </h2>
-        <p className="mt-3 text-sm sm:text-base text-slate-500 dark:text-slate-400 leading-relaxed">
-          End-to-end IT capabilities — systems, security, networking, and managed services — built for clarity and reliability.
-        </p>
-      </motion.div>
+    <div className="relative max-w-[1320px] mx-auto">
+      <div className="mb-4 lg:mb-5 grid grid-cols-1 lg:grid-cols-2 lg:items-center gap-5 lg:gap-8">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col justify-center min-w-0"
+        >
+          <div className="mb-3 flex items-center gap-2.5">
+            <span className="h-[3px] w-9 rounded-full bg-blue-600 dark:bg-blue-400" />
+            <p className="text-xs sm:text-sm font-semibold tracking-[0.22em] uppercase text-blue-600 dark:text-blue-400">
+              What we offer
+            </p>
+          </div>
+          <h2 className="text-[2.5rem] sm:text-[3.25rem] lg:text-[3.875rem] xl:text-[4.125rem] font-bold tracking-tight leading-[1.04]">
+            <span className="text-slate-900 dark:text-white">Solutions </span>
+            <span className="text-blue-600 dark:text-blue-400">&amp; Services</span>
+          </h2>
+          <p className="mt-3.5 sm:mt-4 text-base sm:text-lg text-slate-500 dark:text-slate-400 leading-relaxed max-w-md lg:max-w-[28rem]">
+            End-to-end IT capabilities — systems, security, networking, and managed services — built for clarity and reliability.
+          </p>
+        </motion.div>
+
+        <motion.div
+          aria-hidden
+          initial={{ opacity: 0, scale: 0.98, y: 8 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          className="relative flex items-center justify-center lg:justify-end w-full min-w-0"
+        >
+          <img
+            src="/solutions-hub.png?v=43"
+            alt=""
+            width={666}
+            height={375}
+            className="block dark:hidden w-full max-w-[500px] sm:max-w-[560px] lg:max-w-full xl:max-w-[640px] h-auto object-contain object-center lg:object-right select-none pointer-events-none"
+            draggable={false}
+          />
+          <img
+            src="/solutions-hub-dark.png?v=14"
+            alt=""
+            width={1016}
+            height={496}
+            className="hidden dark:block w-full max-w-[500px] sm:max-w-[560px] lg:max-w-full xl:max-w-[640px] h-auto object-contain object-center lg:object-right select-none pointer-events-none"
+            draggable={false}
+          />
+        </motion.div>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 lg:gap-6">
         {[
           {
             to: '/system',
             icon: Cloud,
-            title: 'System',
+            title: 'SYSTEM',
             delay: 0.08,
             tags: ['Enterprise Cloud', 'Desktop', 'Backup'],
             desc: 'Professional solutions for Enterprise Cloud, Desktop Management, Collaboration, and Backup — delivering reliable results for clients and their customers.',
+            accent: {
+              bar: 'from-blue-600 to-sky-400',
+              iconBg: 'bg-blue-50 text-blue-600 ring-blue-100/80 dark:bg-blue-500/15 dark:text-blue-300 dark:ring-blue-400/20',
+              title: 'text-blue-700 dark:text-blue-300',
+              arrow: 'text-blue-600 bg-white ring-blue-200 dark:text-blue-300 dark:bg-blue-500/10 dark:ring-blue-400/25 group-hover:bg-blue-600 group-hover:text-white group-hover:ring-blue-600',
+              watermark: 'text-blue-500/[0.08] dark:text-blue-300/10',
+              tag: 'bg-slate-100 text-slate-600 ring-slate-200/80 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10',
+            },
           },
           {
             to: '/security',
             icon: Shield,
-            title: 'Security',
-            delay: 0.16,
+            title: 'SECURITY',
+            delay: 0.14,
             tags: ['APT Defense', 'PAM', 'WAF'],
             desc: 'Protect against Advanced Persistent Threats, Privileged Account risk, and web attacks with solutions that keep operations uninterrupted.',
+            accent: {
+              bar: 'from-indigo-500 to-violet-500',
+              iconBg: 'bg-indigo-50 text-indigo-600 ring-indigo-100/80 dark:bg-violet-500/15 dark:text-violet-300 dark:ring-violet-400/20',
+              title: 'text-indigo-700 dark:text-violet-300',
+              arrow: 'text-indigo-600 bg-white ring-indigo-200 dark:text-violet-300 dark:bg-violet-500/10 dark:ring-violet-400/25 group-hover:bg-violet-600 group-hover:text-white group-hover:ring-violet-600',
+              watermark: 'text-indigo-500/[0.08] dark:text-violet-300/10',
+              tag: 'bg-slate-100 text-slate-600 ring-slate-200/80 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10',
+            },
           },
           {
             to: '/network',
             icon: Wifi,
-            title: 'Network',
-            delay: 0.24,
+            title: 'NETWORK',
+            delay: 0.2,
             tags: ['Access Point', 'Switch', 'Gateway'],
             desc: 'Innovative network products — Access Points, Switches, Controllers, and Secure Web Gateway — to optimize your infrastructure.',
+            accent: {
+              bar: 'from-sky-500 to-cyan-400',
+              iconBg: 'bg-cyan-50 text-cyan-700 ring-cyan-100/80 dark:bg-cyan-500/15 dark:text-cyan-300 dark:ring-cyan-400/20',
+              title: 'text-cyan-800 dark:text-cyan-300',
+              arrow: 'text-cyan-700 bg-white ring-cyan-200 dark:text-cyan-300 dark:bg-cyan-500/10 dark:ring-cyan-400/25 group-hover:bg-cyan-600 group-hover:text-white group-hover:ring-cyan-600',
+              watermark: 'text-cyan-500/[0.08] dark:text-cyan-300/10',
+              tag: 'bg-slate-100 text-slate-600 ring-slate-200/80 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10',
+            },
           },
           {
             to: '/service',
             icon: Headphones,
-            title: 'Service',
-            delay: 0.32,
+            title: 'SERVICE',
+            delay: 0.26,
             tags: ['Support', 'Managed IT'],
             desc: 'A wide range of IT services tailored to your requirements — from day-to-day support to longer-term operational needs.',
+            accent: {
+              bar: 'from-violet-500 to-fuchsia-400',
+              iconBg: 'bg-violet-50 text-violet-600 ring-violet-100/80 dark:bg-fuchsia-500/15 dark:text-fuchsia-300 dark:ring-fuchsia-400/20',
+              title: 'text-violet-700 dark:text-fuchsia-300',
+              arrow: 'text-violet-600 bg-white ring-violet-200 dark:text-fuchsia-300 dark:bg-fuchsia-500/10 dark:ring-fuchsia-400/25 group-hover:bg-violet-600 group-hover:text-white group-hover:ring-violet-600',
+              watermark: 'text-violet-500/[0.08] dark:text-fuchsia-300/10',
+              tag: 'bg-slate-100 text-slate-600 ring-slate-200/80 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10',
+            },
           },
         ].map((item) => {
           const Icon = item.icon
           return (
             <Link key={item.to} to={item.to} className="group block h-full">
               <motion.div
-                initial={{ opacity: 0, y: 36 }}
+                initial={{ opacity: 0, y: 32 }}
                 whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
                 transition={{ delay: item.delay, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                className="relative h-full overflow-hidden rounded-2xl p-6 sm:p-7
-                  bg-white/90 dark:bg-slate-900/80
-                  backdrop-blur-sm
-                  border border-slate-200/80 dark:border-white/10
-                  shadow-[0_12px_40px_-24px_rgba(15,23,42,0.35)]
+                className="relative h-full overflow-hidden rounded-2xl p-5 sm:p-6 lg:p-7
+                  bg-white dark:bg-slate-900/90
+                  border border-slate-200/70 dark:border-white/[0.08]
+                  shadow-[0_8px_30px_-20px_rgba(15,23,42,0.25)]
                   transition-all duration-300
-                  hover:-translate-y-1
-                  hover:border-blue-300/70 dark:hover:border-blue-400/35
-                  hover:shadow-[0_24px_50px_-28px_rgba(37,99,235,0.45)]"
+                  hover:-translate-y-0.5
+                  hover:shadow-[0_18px_40px_-24px_rgba(37,99,235,0.3)]"
               >
-                <div
+                <span
                   aria-hidden
-                  className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full
-                    bg-blue-500/10 dark:bg-blue-400/10 blur-2xl
-                    opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  className={`absolute left-6 sm:left-7 top-0 h-[3px] w-16 rounded-b-full bg-gradient-to-r ${item.accent.bar}`}
                 />
 
-                <div className="relative flex items-start justify-between gap-4">
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl
-                    bg-blue-50 text-blue-600
-                    dark:bg-blue-500/15 dark:text-blue-300
-                    ring-1 ring-blue-100 dark:ring-blue-400/20
-                    transition-transform duration-300 group-hover:scale-105">
-                    <Icon size={22} strokeWidth={1.75} />
-                  </span>
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full
-                    text-slate-400 dark:text-slate-500
-                    bg-slate-100/80 dark:bg-white/5
+                <Icon
+                  aria-hidden
+                  size={130}
+                  strokeWidth={1}
+                  className={`pointer-events-none absolute -right-1 bottom-0 ${item.accent.watermark}
+                    transition-transform duration-500 group-hover:scale-[1.03]`}
+                />
+
+                <div className="relative flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className={`inline-flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl ring-1
+                      transition-transform duration-300 group-hover:scale-105 ${item.accent.iconBg}`}>
+                      <Icon size={20} strokeWidth={1.75} className="sm:hidden" />
+                      <Icon size={22} strokeWidth={1.75} className="hidden sm:block" />
+                    </span>
+                    <h3 className={`text-base sm:text-lg font-bold tracking-tight ${item.accent.title}`}>
+                      {item.title}
+                    </h3>
+                  </div>
+                  <span className={`inline-flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full ring-1
                     transition-all duration-300
-                    group-hover:bg-blue-600 group-hover:text-white
-                    group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
-                    <ArrowUpRight size={18} />
+                    group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${item.accent.arrow}`}>
+                    <ArrowUpRight size={16} className="sm:hidden" />
+                    <ArrowUpRight size={17} className="hidden sm:block" />
                   </span>
                 </div>
 
-                <h3 className="relative mt-5 text-xl sm:text-2xl font-bold tracking-tight
-                  text-slate-900 dark:text-white">
-                  {item.title}
-                </h3>
-                <p className="relative mt-2.5 text-sm sm:text-[15px] leading-relaxed
-                  text-slate-500 dark:text-slate-400">
+                <p className="relative mt-3.5 sm:mt-4 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
                   {item.desc}
                 </p>
 
@@ -321,10 +422,7 @@ function Home({title,description,link}) {
                   {item.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-lg px-2.5 py-1 text-[11px] sm:text-xs font-medium
-                        text-slate-600 dark:text-slate-300
-                        bg-slate-100 dark:bg-white/5
-                        ring-1 ring-slate-200/80 dark:ring-white/10"
+                      className={`rounded-full px-3 py-1 text-[11px] sm:text-xs font-medium ring-1 ${item.accent.tag}`}
                     >
                       {tag}
                     </span>
@@ -361,7 +459,7 @@ function Home({title,description,link}) {
           Latest insights
         </p>
         <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-          News Update
+          Knowledge Update
         </h2>
         <p className="mt-2 text-sm sm:text-base text-slate-500 dark:text-slate-400">
           Product notes, industry updates, and stories from the Avere team.
@@ -375,7 +473,7 @@ function Home({title,description,link}) {
             text-sm font-semibold text-slate-700 dark:text-slate-200
             hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
         >
-          See all news
+          See all knowledge
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-full
             bg-slate-900 text-white dark:bg-white dark:text-slate-900
             transition-transform group-hover:translate-x-0.5">
@@ -415,7 +513,7 @@ function Home({title,description,link}) {
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-semibold tracking-[0.2em] uppercase text-blue-600 dark:text-blue-400">
-              Newsroom
+              Knowledge
             </p>
             <h3 className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
               Fresh stories are being prepared
@@ -431,7 +529,7 @@ function Home({title,description,link}) {
               text-white dark:text-slate-900
               transition hover:scale-[1.02] active:scale-[0.98]"
           >
-            Visit news
+            Visit knowledge
             <ArrowUpRight size={16} />
           </Link>
         </div>
@@ -489,8 +587,8 @@ function Home({title,description,link}) {
                 </div>
 
                 <div className="mt-3 flex items-center justify-between gap-2">
-                  <span className="text-xs text-slate-400 dark:text-slate-500">
-                    {item.date}
+                  <span className="text-xs text-slate-400 dark:text-slate-500 tabular-nums">
+                    {formatCatalogDate(item)}
                   </span>
                   <span className="inline-flex items-center gap-1 text-sm font-medium
                     text-slate-600 dark:text-slate-300
@@ -519,81 +617,27 @@ function Home({title,description,link}) {
 
   <div className="relative max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-stretch">
 
-    {/* Left visual */}
+    {/* Left visual — show full banner (no crop); text is baked into the image */}
     <motion.div
       initial={{ opacity: 0, x: -36 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: false, amount: 0.3 }}
       transition={{ duration: 0.7, ease: 'easeOut' }}
-      className="group relative w-full min-h-[380px] sm:min-h-[420px] rounded-[28px] overflow-hidden
-        ring-1 ring-black/5 dark:ring-white/10 shadow-[0_24px_60px_-28px_rgba(15,23,42,0.45)]"
+      className="group relative w-full self-center rounded-[28px] overflow-hidden
+        ring-1 ring-black/5 dark:ring-white/10 shadow-[0_24px_60px_-28px_rgba(15,23,42,0.45)]
+        bg-white"
     >
-      <motion.img
-        src="/myphoto12.jpg"
-        alt="Join with us"
-        className="absolute inset-0 w-full h-full object-cover"
-        initial={{ scale: 1.06 }}
-        whileInView={{ scale: 1 }}
-        viewport={{ once: false }}
-        transition={{ duration: 1.2, ease: 'easeOut' }}
-        whileHover={{ scale: 1.04 }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/55 to-slate-950/20" />
-      <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 via-transparent to-cyan-400/10 mix-blend-soft-light" />
-
-      <div className="relative z-10 h-full flex flex-col justify-end p-7 sm:p-9 text-white">
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
+      <Link to="/position" className="block" aria-label="View open positions">
+        <motion.img
+          src="/careers-join.png"
+          alt="Join Avere Ricco — we are looking for talented people"
+          className="block w-full h-auto transition duration-500 group-hover:scale-[1.01]"
+          initial={{ opacity: 0.92 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: false }}
-          transition={{ delay: 0.15, duration: 0.5 }}
-          className="text-[11px] font-semibold tracking-[0.22em] uppercase text-blue-200/90 mb-2"
-        >
-          Careers
-        </motion.p>
-        <motion.h2
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false }}
-          transition={{ delay: 0.22, duration: 0.55 }}
-          className="text-3xl sm:text-4xl font-bold tracking-tight"
-        >
-          Join with Us
-        </motion.h2>
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="mt-2 text-sm sm:text-base text-white/75 max-w-sm"
-        >
-          Become part of our team — build systems that matter.
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false }}
-          transition={{ delay: 0.38, duration: 0.5 }}
-        >
-          <Link
-            to="/position"
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-white text-slate-900 px-5 py-2.5
-              text-sm font-semibold shadow-lg shadow-black/20
-              transition hover:bg-blue-50 hover:scale-[1.02] active:scale-[0.98]"
-          >
-            View Open Positions
-            <motion.span
-              aria-hidden
-              className="inline-block"
-              animate={{ x: [0, 3, 0] }}
-              transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              →
-            </motion.span>
-          </Link>
-        </motion.div>
-      </div>
+          transition={{ duration: 0.7, ease: 'easeOut' }}
+        />
+      </Link>
     </motion.div>
 
     {/* Right list */}
@@ -736,8 +780,8 @@ function Home({title,description,link}) {
       <div className="lg:col-span-6">
         <div className="flex flex-col gap-5 sm:gap-6">
           {[
-            { src: 'about1.png', alt: 'Office', delay: 0 },
-            { src: '/about2.png', alt: 'Team', delay: 0.18 },
+            { src: '/about1.png', alt: 'Avere Ricco office reception', delay: 0 },
+            { src: '/about2.png', alt: 'Avere Ricco team outing', delay: 0.18 },
           ].map((img) => (
             <motion.div
               key={img.src}

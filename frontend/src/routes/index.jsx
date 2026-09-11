@@ -12,7 +12,10 @@ import {
 import App from '../App.jsx'
 import AdminLayout from '../AdminLayout.jsx'
 import ServiceForm from '../pages/admin/serviceForm.jsx'
+import Knowledge from '../pages/knowledge.jsx'
+import NewsPage from '../pages/news.jsx'
 import KnowledgeForm from '../pages/admin/knowledgeForm.jsx'
+import NewsForm from '../pages/admin/newsForm.jsx'
 import Product from '../pages/product.jsx'
 import AdminSecerity from '../pages/admin/adminsecurity.jsx'
 import SecurityForm from "../pages/admin/securityForm.jsx"
@@ -27,20 +30,23 @@ import VerifyEmail from '../pages/VerifyEmail.jsx'
 import System from '../pages/system.jsx'
 import Network from '../pages/network.jsx'
 import Security from '../pages/security.jsx'
-import Knowledge from '../pages/knowledge.jsx'
 import Service from '../pages/service.jsx'
 import ServiceDetail from '../pages/servicedetail.jsx'
 import SystemDetail from "../pages/systemdetail.jsx"
 import NetworkDetail from "../pages/networkdetail.jsx"
 import KnowledgeDetail from "../pages/knowledgedetail.jsx"
+import NewsDetail from "../pages/newsdetail.jsx"
+import AdminKnowledgeDetail from '../pages/admin/adminknowledgedetail.jsx'
+import AdminNews from '../pages/admin/adminnews.jsx'
+import AdminNewsDetail from '../pages/admin/adminnewsdetail.jsx'
 import SecurityDetail from "../pages/securitydetail.jsx"
 import AdminServiceDetail from "../pages/admin/adminservicedetail.jsx"
-import AdminKnowledgeDetail from '../pages/admin/adminknowledgedetail.jsx'
 import AdminSecerityDetail from '../pages/admin/adminseceritydetail.jsx'
 import AdminSystemDetail from '../pages/admin/adminsystemdetail.jsx'
 import AdminNetWorkDetail from '../pages/admin/adminnetworkdetail.jsx'
 import AdminCategory from '../pages/admin/admincategory.jsx'
 import AdminContactus from '../pages/admin/admincontact.jsx'
+import AdminContactInfo from '../pages/admin/admincontactinfo.jsx'
 import Adminevents from '../pages/admin/adminevents.jsx' 
 import EventsForm from '../pages/admin/eventsForm.jsx'
 import AdminEventDetail from '../pages/admin/admineventdetail.jsx'
@@ -54,11 +60,21 @@ import AdminPosition from '../pages/admin/adminposition.jsx'
 import AdminPositionDetail from '../pages/admin/adminpositiondetail.jsx'
 import AdminSettings from '../pages/admin/adminsettings.jsx'
 import AdminUsers from '../pages/admin/adminusers.jsx'
+import AdminHeroSlides from '../pages/admin/adminheroslides.jsx'
+import HeroSlideForm from '../pages/admin/heroSlideForm.jsx'
+import AdminPartners from '../pages/admin/adminpartners.jsx'
+import PartnerForm from '../pages/admin/partnerForm.jsx'
 import Library from '../pages/library.jsx'
 import Profile from '../pages/profile.jsx'
 import Settings from '../pages/settings.jsx'
+import Maintenance from '../pages/maintenance.jsx'
+
 function Index() {
     const router = createBrowserRouter([
+  {
+    path: "/maintenance",
+    element: <Maintenance />
+  },
   {
     path: "/",
     element: <App />,
@@ -132,6 +148,14 @@ function Index() {
         path : "/knowledge/:id",
         element: <KnowledgeDetail></KnowledgeDetail>
       },
+      {
+        path : "/news",
+        element: <NewsPage></NewsPage>
+      },
+      {
+        path : "/news/:id",
+        element: <NewsDetail></NewsDetail>
+      },
        {
         path : "/service",
         element: <Service></Service>
@@ -198,6 +222,22 @@ function Index() {
       {
         path : "adminknowledge/edit/:id",
         element: <KnowledgeForm></KnowledgeForm>
+      },
+      {
+        path : "adminnews",
+        element: <AdminNews></AdminNews>
+      },
+      {
+        path : "adminnews/:id",
+        element: <AdminNewsDetail></AdminNewsDetail>
+      },
+      {
+        path : "adminnews/create",
+        element: <NewsForm></NewsForm>
+      },
+      {
+        path : "adminnews/edit/:id",
+        element: <NewsForm></NewsForm>
       },  {
         path : "adminsecurity/:id",
         element: <AdminSecerityDetail></AdminSecerityDetail>
@@ -251,6 +291,34 @@ function Index() {
         element:<AdminCategory></AdminCategory>
       },
       {
+        path:"adminproducts",
+        element:<AdminCategory></AdminCategory>
+      },
+      {
+        path:"adminheroslides",
+        element:<AdminHeroSlides />
+      },
+      {
+        path:"adminheroslides/create",
+        element:<HeroSlideForm />
+      },
+      {
+        path:"adminheroslides/edit/:id",
+        element:<HeroSlideForm />
+      },
+      {
+        path:"adminpartners",
+        element:<AdminPartners />
+      },
+      {
+        path:"adminpartners/create",
+        element:<PartnerForm />
+      },
+      {
+        path:"adminpartners/edit/:id",
+        element:<PartnerForm />
+      },
+      {
         path:"adminevents",
         element:<Adminevents></Adminevents>
       },
@@ -265,6 +333,10 @@ function Index() {
       {
         path:"adminevents/edit/:id",
         element:<EventsForm></EventsForm>
+      },
+      {
+        path:"admincontactinfo",
+        element:<AdminContactInfo />
       },
       {
         path:"admincontactus",
